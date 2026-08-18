@@ -1,4 +1,4 @@
-namespace LastOut.Sim;
+namespace OffTheGrid.Sim;
 
 /// <summary>
 /// Deterministic simulation loop.

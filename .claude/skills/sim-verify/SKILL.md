@@ -1,6 +1,6 @@
 ---
 name: sim-verify
-description: Build and test the pure C# simulation library. Use after ANY change to src/LastOut.Sim, src/LastOut.Data, or src/LastOut.Tests. Fast (~7s) — run it freely, and always before reporting a sim task complete. Does not require Unity.
+description: Build and test the pure C# simulation library. Use after ANY change to src/OffTheGrid.Sim, src/LastOut.Data, or src/OffTheGrid.Tests. Fast (~7s) — run it freely, and always before reporting a sim task complete. Does not require Unity.
 ---
 
 # Verify the simulation
@@ -8,9 +8,9 @@ description: Build and test the pure C# simulation library. Use after ANY change
     ./tools/verify-sim.sh
 
 Runs:
-- `dotnet build src/LastOut.Sim -c Release -warnaserror`
-- `dotnet test src/LastOut.Tests -c Release --logger "console;verbosity=minimal" --no-build`
-- Checks that no `using UnityEngine` appears in src/LastOut.Sim/
+- `dotnet build src/OffTheGrid.Sim -c Release -warnaserror`
+- `dotnet test src/OffTheGrid.Tests -c Release --logger "console;verbosity=minimal" --no-build`
+- Checks that no `using UnityEngine` appears in src/OffTheGrid.Sim/
 
 ## Interpreting results
 

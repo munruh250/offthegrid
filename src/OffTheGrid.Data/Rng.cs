@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LastOut.Data;
+namespace OffTheGrid.Data;
 
 /// <summary>
 /// Deterministic, cross-platform RNG using PCG32.

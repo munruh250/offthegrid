@@ -1,6 +1,6 @@
 using System;
 
-namespace LastOut.Data;
+namespace OffTheGrid.Data;
 
 public readonly struct Float2(float x, float y) : IEquatable<Float2>
 {

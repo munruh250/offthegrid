@@ -1,4 +1,4 @@
-namespace LastOut.Sim;
+namespace OffTheGrid.Sim;
 
 /// <summary>
 /// Immutable snapshot of the game state at a point in time.

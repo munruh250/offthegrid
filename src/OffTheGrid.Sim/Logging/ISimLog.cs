@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LastOut.Sim.Logging;
+namespace OffTheGrid.Sim.Logging;
 
 /// <summary>
 /// Logging interface for sim events.

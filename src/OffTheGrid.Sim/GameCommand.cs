@@ -1,4 +1,4 @@
-namespace LastOut.Sim;
+namespace OffTheGrid.Sim;
 
 /// <summary>
 /// A command from the player or environment that mutates the game state.

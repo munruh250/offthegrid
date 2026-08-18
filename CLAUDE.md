@@ -1,14 +1,14 @@
-# LAST OUT
+# OFF THE GRID
 
 Mobile survival-contest game. Unity 6.3 LTS + URP 2D.
 Design docs in `outputs/`. Read them only when the task requires design context.
 
 ## Architecture — the one rule that matters
 
-`src/LastOut.Sim/` is a pure C# library with ZERO UnityEngine dependencies.
+`src/OffTheGrid.Sim/` is a pure C# library with ZERO UnityEngine dependencies.
 It is the game. Unity is a renderer and input layer.
 
-- **NEVER** add a `UnityEngine` using/reference to LastOut.Sim. CI blocks it.
+- **NEVER** add a `UnityEngine` using/reference to OffTheGrid.Sim. CI blocks it.
 - **NEVER** put game logic in `unity/`. Presentation and input only.
 - Sim exposes immutable snapshots + a command queue. The view never mutates sim state.
 - Minigames return a normalised scalar 0..1. They do not compute outcomes.

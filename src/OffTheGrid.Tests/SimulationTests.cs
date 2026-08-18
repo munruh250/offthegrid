@@ -1,7 +1,7 @@
-namespace LastOut.Tests;
+namespace OffTheGrid.Tests;
 
 using Xunit;
-using LastOut.Sim;
+using OffTheGrid.Sim;
 
 public sealed class SimulationTests
 {

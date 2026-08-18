@@ -1,4 +1,4 @@
-# LAST OUT — Unity Presentation & Input Layer
+# OFF THE GRID — Unity Presentation & Input Layer
 
 Unity code here is a **view** and **input adapter** for the sim. It owns:
 - Rendering (sprites, UI, animations)

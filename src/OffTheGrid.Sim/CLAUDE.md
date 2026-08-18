@@ -1,4 +1,4 @@
-# LAST OUT.Sim — Pure C# Game Logic
+# OFF THE GRID.Sim — Pure C# Game Logic
 
 This is the core game simulation. It has ZERO UnityEngine dependencies.
 It compiles and runs standalone on any .NET platform (Windows, macOS, Linux, iOS, Android).
@@ -8,14 +8,14 @@ It compiles and runs standalone on any .NET platform (Windows, macOS, Linux, iOS
 Every line in this folder must pass this check:
 
 ```bash
-./tools/check-no-unity-refs.sh src/LastOut.Sim
+./tools/check-no-unity-refs.sh src/OffTheGrid.Sim
 ```
 
 If you reference UnityEngine anywhere in this tree, the check fails and the build fails.
 This is not a style preference — it is the only thing that keeps the ~7s compile loop fast.
 
 When you need something that *feels* like it should be UnityEngine (Vector2, Random, etc.):
-- `Vector2` / `Vector3` → use sim-local `Float2` / `Float3` (in LastOut.Data.Sim)
+- `Vector2` / `Vector3` → use sim-local `Float2` / `Float3` (in OffTheGrid.Data.Sim)
 - `Vector2Int` → use sim-local `Int2`
 - `Random` → use `Rng.Stream("name")` for a PCG32 stream
 - `Physics2D.Raycast` → build your own. Sim is simulation, not rendering.
@@ -23,7 +23,7 @@ When you need something that *feels* like it should be UnityEngine (Vector2, Ran
 ## Code layout
 
 ```
-LastOut.Sim/
+OffTheGrid.Sim/
 ├── CLAUDE.md                      (you are here)
 ├── GameState.cs                   (immutable core snapshot)
 ├── GameCommand.cs                 (input + RNG results)
@@ -43,7 +43,7 @@ LastOut.Sim/
   These are written once per slot and read for display.
 - **Commands** (`sealed class` or `readonly struct`): player input, RNG results, weather events.
   These accumulate in a queue and drive the simulation forward.
-- **Constants** (`static class`): all numbers live in LastOut.Data, not here.
+- **Constants** (`static class`): all numbers live in OffTheGrid.Data, not here.
 
 ## Determinism is non-negotiable
 
@@ -57,7 +57,7 @@ Do not do it.
 
 ## Testing
 
-- Tests live in `../LastOut.Tests/`, not here.
+- Tests live in `../OffTheGrid.Tests/`, not here.
 - Aim for ~50 unit tests per mechanic (see `outputs/02` §3.2 for the QA matrix).
 - Use `BalanceAssert.*` for game-critical invariants. Never weaken them to make a test pass.
 - Cross-device determinism: the test harness will run the same replay on multiple platforms
