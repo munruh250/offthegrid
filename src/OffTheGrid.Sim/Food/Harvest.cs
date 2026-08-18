@@ -110,111 +110,6 @@ public static class Harvest
         _ => 0.0f
     };
 
-    private static readonly Dictionary<(Season, Activity), Encounter[]> Table = new()
-    {
-        // --- Salmon run: the abundance window. Fat available, bank now. ---
-        [(Season.SalmonRun, Activity.Fishing)] =
-        [
-            new(FoodSource.ChinookSalmon, 0.34f),
-            new(FoodSource.CohoSalmon, 0.30f),
-            new(FoodSource.SockeyeSalmon, 0.26f),
-            new(FoodSource.CutthroatTrout, 0.14f)
-        ],
-        [(Season.SalmonRun, Activity.HuntingStalk)] =
-        [
-            new(FoodSource.RooseveltElk, 0.03f),
-            new(FoodSource.BlacktailDeer, 0.12f),
-            new(FoodSource.BlackBear, 0.04f),
-            new(FoodSource.SnowshoeHare, 0.18f),
-            new(FoodSource.Grouse, 0.16f)
-        ],
-        [(Season.SalmonRun, Activity.TrapLine)] =
-        [
-            new(FoodSource.SnowshoeHare, 0.22f),
-            new(FoodSource.Grouse, 0.12f)
-        ],
-        [(Season.SalmonRun, Activity.Foraging)] =
-        [
-            new(FoodSource.Berries, 0.52f),
-            new(FoodSource.Mussels, 0.34f),
-            new(FoodSource.SeaweedAndKelp, 0.14f),
-            new(FoodSource.DungenessCrab, 0.10f)
-        ],
-
-        // --- Tapering: coho declining, fat sources thinning. ---
-        [(Season.RunTapering, Activity.Fishing)] =
-        [
-            new(FoodSource.CohoSalmon, 0.16f),
-            new(FoodSource.CutthroatTrout, 0.20f),
-            new(FoodSource.Rockfish, 0.18f)
-        ],
-        [(Season.RunTapering, Activity.HuntingStalk)] =
-        [
-            new(FoodSource.RooseveltElk, 0.03f),
-            new(FoodSource.BlacktailDeer, 0.18f),
-            new(FoodSource.BlackBear, 0.04f),
-            new(FoodSource.SnowshoeHare, 0.18f),
-            new(FoodSource.Grouse, 0.14f)
-        ],
-        [(Season.RunTapering, Activity.TrapLine)] =
-        [
-            new(FoodSource.SnowshoeHare, 0.26f),
-            new(FoodSource.Grouse, 0.14f)
-        ],
-        [(Season.RunTapering, Activity.Foraging)] =
-        [
-            new(FoodSource.Berries, 0.30f),
-            new(FoodSource.Mussels, 0.34f),
-            new(FoodSource.SeaweedAndKelp, 0.16f),
-            new(FoodSource.DungenessCrab, 0.08f)
-        ],
-
-        // --- Lean season: the protein trap bites hardest. ---
-        [(Season.Lean, Activity.Fishing)] =
-        [
-            new(FoodSource.CutthroatTrout, 0.16f),
-            new(FoodSource.Rockfish, 0.18f)
-        ],
-        [(Season.Lean, Activity.HuntingStalk)] =
-        [
-            new(FoodSource.BlacktailDeer, 0.24f),
-            new(FoodSource.SnowshoeHare, 0.22f),
-            new(FoodSource.Grouse, 0.14f)
-        ],
-        [(Season.Lean, Activity.TrapLine)] =
-        [
-            new(FoodSource.SnowshoeHare, 0.34f),
-            new(FoodSource.Grouse, 0.18f)
-        ],
-        [(Season.Lean, Activity.Foraging)] =
-        [
-            new(FoodSource.Mussels, 0.36f),
-            new(FoodSource.SeaweedAndKelp, 0.22f)
-        ],
-
-        // --- Winter: cache or die. Bear denned, no fat source at all. ---
-        [(Season.Winter, Activity.Fishing)] =
-        [
-            new(FoodSource.Rockfish, 0.12f)
-        ],
-        [(Season.Winter, Activity.HuntingStalk)] =
-        [
-            new(FoodSource.BlacktailDeer, 0.20f),
-            new(FoodSource.SnowshoeHare, 0.18f),
-            new(FoodSource.Grouse, 0.10f)
-        ],
-        [(Season.Winter, Activity.TrapLine)] =
-        [
-            new(FoodSource.SnowshoeHare, 0.30f),
-            new(FoodSource.Grouse, 0.16f)
-        ],
-        [(Season.Winter, Activity.Foraging)] =
-        [
-            new(FoodSource.Mussels, 0.24f),
-            new(FoodSource.SeaweedAndKelp, 0.18f)
-        ]
-    };
-
     /// <summary>Which attribute governs this activity. Design spec 4.1.</summary>
     public static AttributeKind? GoverningAttribute(Activity activity) => activity switch
     {
@@ -256,9 +151,10 @@ public static class Harvest
     /// </summary>
     public static HarvestResult Resolve(
         Activity activity, Season season, int attribute, Loadout gear, Rng rng,
-        float territoryQuality = 1f)
+        float territoryQuality = 1f, Biome? biome = null)
     {
-        if (!Table.TryGetValue((season, activity), out var encounters)) return default;
+        var encounters = (biome ?? Biome.VancouverIsland).EncountersFor(season, activity);
+        if (encounters.Length == 0) return default;
 
         // Can this even be attempted? Fishing without tackle is not fishing.
         var activityRequirement = activity switch

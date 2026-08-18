@@ -106,8 +106,10 @@ public static class FoodTable
         // therefore absorb more total energy per day than a hunter sitting on a
         // lean cache - that is the strategic point of the route, and it needs
         // enough yield to actually matter.
-        [FoodSource.Berries]        = new(FoodSource.Berries,           1.0f,  1.6f,     920f,     11f,     5f),
-        [FoodSource.SeaweedAndKelp] = new(FoodSource.SeaweedAndKelp,    1.0f,  0.8f,     350f,     14f,     2f)
+        // 4 kg is a 2.2-hour slot of picking in a good patch, at an unchanged
+        // ~575 kcal/kg. The previous 1.6 kg was a single sitting, not a work slot.
+        [FoodSource.Berries]        = new(FoodSource.Berries,           1.0f,  4.0f,    2300f,     28f,    12f),
+        [FoodSource.SeaweedAndKelp] = new(FoodSource.SeaweedAndKelp,    1.0f,  2.0f,     875f,     35f,     5f)
     };
 
     public static FoodEntry Get(FoodSource source) => entries[source];

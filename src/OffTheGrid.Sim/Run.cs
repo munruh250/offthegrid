@@ -81,9 +81,11 @@ public sealed class Run
         float bodyFatPercent,
         IReadOnlyDictionary<AttributeKind, int> attributes,
         Loadout? gear = null,
-        BalanceProvider? balanceProvider = null)
+        BalanceProvider? balanceProvider = null,
+        Biome? biome = null)
     {
         Gear = gear ?? Loadout.Standard;
+        Biome = biome ?? Biome.VancouverIsland;
         balance = balanceProvider ?? new BalanceProvider();
         var b = balance.Current;
 
@@ -126,6 +128,9 @@ public sealed class Run
 
     /// <summary>The ten items. Design spec 4.4.</summary>
     public Loadout Gear { get; }
+
+    /// <summary>Where this run is taking place.</summary>
+    public Biome Biome { get; }
 
     /// <summary>
     /// How worked-out the ground around camp is, 1.0 fresh down to near zero.
@@ -323,8 +328,7 @@ public sealed class Run
     /// Night temperature for the MVP biome, falling across the run. Balance doc
     /// 5.2 and 6.1 both key off this - it drives clo demand and firewood need.
     /// </summary>
-    public static float NightTempForDay(int dayNumber) =>
-        12f - 17f * Math.Clamp((dayNumber - 1) / 75f, 0f, 1f);
+    public float NightTempForDay(int dayNumber) => Biome.NightTemperature(dayNumber);
 
     /// <summary>
     /// Spend a slot ranging out to find better ground. Design spec 8.2's
@@ -469,7 +473,7 @@ public sealed class Run
             var governing = Harvest.GoverningAttribute(activity);
             if (governing.HasValue)
             {
-                var caught = Harvest.Resolve(activity, season, attributes[governing.Value], Gear, Rng, EffectiveTerritory);
+                var caught = Harvest.Resolve(activity, season, attributes[governing.Value], Gear, Rng, EffectiveTerritory, Biome);
                 if (caught.CaughtSomething)
                 {
                     Larder.Add(caught.ProteinG, caught.FatG, caught.CarbohydrateG, caught.EdibleKg);
