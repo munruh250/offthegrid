@@ -9,6 +9,7 @@ using OffTheGrid.Sim.Logging;
 using OffTheGrid.Sim.Morale;
 using OffTheGrid.Sim.Nutrition;
 using OffTheGrid.Sim.Record;
+using OffTheGrid.Data.Gear;
 using OffTheGrid.Data.Tables;
 using OffTheGrid.Sim.Time;
 
@@ -74,8 +75,10 @@ public sealed class Run
         float weightKg,
         float bodyFatPercent,
         IReadOnlyDictionary<AttributeKind, int> attributes,
+        Loadout? gear = null,
         BalanceProvider? balanceProvider = null)
     {
+        Gear = gear ?? Loadout.Standard;
         balance = balanceProvider ?? new BalanceProvider();
         var b = balance.Current;
 
@@ -87,6 +90,11 @@ public sealed class Run
         fitness = attributes[AttributeKind.Fitness];
         this.attributes = attributes;
         Larder = new Larder();
+
+        // Drop-point lottery. Spec 8.2 is explicit that a poor drop is a real and
+        // fair outcome; it is what makes exploration a strategy rather than
+        // fog-clearing busywork.
+        TerritoryQuality = 0.7f + Rng.Stream("world.droppoint").NextFloat() * 0.6f;
 
         Record = new RunRecord
         {
@@ -109,6 +117,16 @@ public sealed class Run
     public MoraleState Morale { get; }
     public RunRecord Record { get; }
     public Larder Larder { get; }
+
+    /// <summary>The ten items. Design spec 4.4.</summary>
+    public Loadout Gear { get; }
+
+    /// <summary>
+    /// How good the ground around camp is, as a multiplier on encounter rates.
+    /// Design spec 8.2: animals live on the map, your drop point may genuinely be
+    /// poor, and a good area exists somewhere. Exploring finds it.
+    /// </summary>
+    public float TerritoryQuality { get; private set; }
 
     /// <summary>Shelter built so far. Drives clo, and its milestones drive morale.</summary>
     public ShelterTier Shelter { get; private set; } = ShelterTier.None;
@@ -141,7 +159,11 @@ public sealed class Run
 
         comfortProgressSlots -= SlotsPerComfortProject;
         ComfortProjectsCompleted++;
-        Morale.ApplyEvent(MoraleSource.ComfortProject, b.MoraleProjectCompleted, b);
+
+        // Spec 4.1: Resolve governs "morale gained per comfort project". Another
+        // clause that was specified and never implemented.
+        float payout = b.MoraleProjectCompleted * (0.75f + 0.05f * attributes[AttributeKind.Resolve]);
+        Morale.ApplyEvent(MoraleSource.ComfortProject, payout, b);
         Record.Trace.Add(new TraceEntry
         {
             Day = DayNumber, Slot = 0, Kind = TraceKind.MoraleEvent,
@@ -165,8 +187,19 @@ public sealed class Run
     }
 
     /// <summary>Insulation available at night: clothing, bag, and whatever is built.</summary>
-    public float AvailableClo =>
-        ShelterTable.BaseClothingClo + ShelterTable.SleepingBagClo + ShelterTable.Get(Shelter).Clo;
+    public float AvailableClo => Gear.ClothingClo + ShelterTable.Get(Shelter).Clo;
+
+    /// <summary>
+    /// Clo demand after Cold Adaptation. Design spec 4.1 gives the attribute a
+    /// "thermoneutral offset" - it was previously read NOWHERE in the sim, making
+    /// it the one attribute with no effect at all.
+    /// </summary>
+    public float CloDemandTonight(int dayNumber)
+    {
+        float raw = ShelterTable.CloDemandForNightTemp(NightTempForDay(dayNumber));
+        float offset = 0.14f * (attributes[AttributeKind.ColdAdaptation] - 5);
+        return Math.Max(0f, raw - offset);
+    }
 
     /// <summary>
     /// Spend a slot on shelter. Bushcraft makes the slot worth more, which is
@@ -176,6 +209,10 @@ public sealed class Run
     {
         var next = NextTier(Shelter);
         if (next == Shelter) return;   // cabin is the ceiling
+
+        // You cannot build what your kit cannot cut. Balance doc 5: the log
+        // shelter needs an axe AND a saw.
+        if (next > GearEffects.MaxShelterTier(Gear)) return;
 
         float bushcraft = attributes[AttributeKind.Bushcraft];
         ShelterProgressSlots += Harvest.SkillMultiplier((int)bushcraft);
@@ -206,6 +243,38 @@ public sealed class Run
     /// </summary>
     public static float NightTempForDay(int dayNumber) =>
         12f - 17f * Math.Clamp((dayNumber - 1) / 75f, 0f, 1f);
+
+    /// <summary>
+    /// Spend a slot ranging out to find better ground. Design spec 8.2's
+    /// prospecting model, and the thing Fitness is actually FOR.
+    ///
+    /// Before this, Fitness bought only an ~8% energy efficiency multiplier -
+    /// which against the Endurance Athlete's 10 kg fat deficit was no contest,
+    /// and the archetype was simply worse. Prospecting gives a high-Fitness build
+    /// a lane: range out cheaply, find the good valley, then harvest it.
+    /// </summary>
+    private void Prospect()
+    {
+        int fitness = attributes[AttributeKind.Fitness];
+
+        // Fitness gets its own curve, steeper than the generic skill multiplier:
+        // 0.86 at Fitness 3 against 1.58 at Fitness 9. Ranging out is the thing
+        // this attribute is supposed to be FOR, so the spread has to be wide
+        // enough to be worth building around.
+        float fitnessScale = 0.5f + 0.12f * fitness;
+
+        // Diminishing returns. The first day out finds the obvious good ground;
+        // the tenth is refining. This also stops exploration being a strictly
+        // dominant opener.
+        float headroom = (MaxTerritoryQuality - TerritoryQuality)
+                       / (MaxTerritoryQuality - 1.0f);
+
+        float gain = 0.055f * fitnessScale * Math.Max(0.15f, headroom);
+        TerritoryQuality = Math.Min(TerritoryQuality + gain, MaxTerritoryQuality);
+    }
+
+    /// <summary>The best ground findable in a biome. Exploration has diminishing returns.</summary>
+    public const float MaxTerritoryQuality = 1.9f;
 
     private static ShelterTier NextTier(ShelterTier current) => current switch
     {
@@ -287,16 +356,19 @@ public sealed class Run
             {
                 anyBuildProgress = true;
                 if (activity == Activity.ShelterBuild) AdvanceShelter(b);
-                if (activity == Activity.RenderMarrow) Larder.RenderMarrow(1f, b);
+                if (activity == Activity.RenderMarrow && GearEffects.CanPerform(Gear, ActivityRequirement.Rendering))
+                    Larder.RenderMarrow(1f, b);
                 if (activity == Activity.WhittleComfortProject) AdvanceComfortProject(b);
             }
+
+            if (activity == Activity.Exploring) Prospect();
 
             // Working a slot may produce food. This is where Hunting and Foraging
             // finally matter, and where two runs on different seeds diverge.
             var governing = Harvest.GoverningAttribute(activity);
             if (governing.HasValue)
             {
-                var caught = Harvest.Resolve(activity, season, attributes[governing.Value], Rng);
+                var caught = Harvest.Resolve(activity, season, attributes[governing.Value], Gear, Rng, TerritoryQuality);
                 if (caught.CaughtSomething)
                 {
                     Larder.Add(caught.ProteinG, caught.FatG, caught.EdibleKg);
@@ -348,7 +420,7 @@ public sealed class Run
         var moraleTotals = Morale.EvaluateDay(new MoraleDayInputs
         {
             FoodInsecure = foodInsecure,
-            ShelterInadequate = AvailableClo < ShelterTable.CloDemandForNightTemp(NightTempForDay(DayNumber)),
+            ShelterInadequate = AvailableClo < CloDemandTonight(DayNumber),
             NoBuildProgress = !anyBuildProgress,
             SoakedAtSleep = soaked,
             WeightLossFraction = Body.WeightLossFraction,

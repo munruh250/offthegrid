@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using OffTheGrid.Data;
+using OffTheGrid.Data.Gear;
 using OffTheGrid.Data.Tables;
 using OffTheGrid.Sim.Record;
 using OffTheGrid.Sim.Time;
@@ -214,37 +215,99 @@ public static class Harvest
     /// "encountered but missed", which is a real and common outcome and should be
     /// surfaced to the player rather than silently reported as nothing found.
     /// </summary>
-    public static HarvestResult Resolve(Activity activity, Season season, int attribute, Rng rng)
+    /// <summary>What a food source demands of the kit.</summary>
+    public static ActivityRequirement RequirementFor(FoodSource source, Activity activity) => activity switch
+    {
+        Activity.Fishing => ActivityRequirement.Fishing,
+        Activity.TrapLine => ActivityRequirement.Trapping,
+        Activity.Foraging => ActivityRequirement.Foraging,
+        Activity.HuntingStalk => source is FoodSource.RooseveltElk or FoodSource.BlackBear or FoodSource.BlacktailDeer
+            ? ActivityRequirement.BigGame
+            : ActivityRequirement.SmallGame,
+        _ => ActivityRequirement.None
+    };
+
+    /// <summary>
+    /// Resolve one slot. Rolls encounter, then conversion.
+    ///
+    /// Gear gates and multiplies. Without a bow the big animals still walk past
+    /// you - the encounter happens, and you watch it leave. That is deliberate:
+    /// seeing what you cannot take is a sharper lesson about your loadout than
+    /// never seeing it, and it is exactly what the show puts on screen.
+    ///
+    /// <paramref name="territoryQuality"/> is the prospecting term from design
+    /// spec 8.2 - animals live on the map, your drop point may genuinely be poor,
+    /// and exploring finds better ground.
+    /// </summary>
+    public static HarvestResult Resolve(
+        Activity activity, Season season, int attribute, Loadout gear, Rng rng,
+        float territoryQuality = 1f)
     {
         if (!Table.TryGetValue((season, activity), out var encounters)) return default;
+
+        // Can this even be attempted? Fishing without tackle is not fishing.
+        var activityRequirement = activity switch
+        {
+            Activity.Fishing => ActivityRequirement.Fishing,
+            Activity.TrapLine => ActivityRequirement.Trapping,
+            Activity.Foraging => ActivityRequirement.Foraging,
+            _ => ActivityRequirement.None
+        };
+        if (activityRequirement != ActivityRequirement.None && !GearEffects.CanPerform(gear, activityRequirement))
+            return default;
+
+        float yieldMultiplier = GearEffects.YieldMultiplier(gear, activityRequirement);
 
         float roll = rng.Stream("harvest.encounter").NextFloat();
         float cumulative = 0f;
 
         foreach (var encounter in encounters)
         {
-            cumulative += encounter.EncounterProbability;
+            cumulative += encounter.EncounterProbability * yieldMultiplier;
             if (roll >= cumulative) continue;
+
+            // Encountered. Now: do you have what it takes to convert it?
+            var need = RequirementFor(encounter.Source, activity);
+            if (!GearEffects.CanPerform(gear, need))
+                return new HarvestResult { Encountered = true, EncounteredSource = encounter.Source };
 
             float conversion = BaseConversion(encounter.Source, activity) * SkillMultiplier(attribute);
             bool taken = rng.Stream("harvest.conversion").NextFloat() < conversion;
 
             return taken
-                ? Take(encounter.Source, rng)
+                ? Take(encounter.Source, rng, territoryQuality)
                 : new HarvestResult { Encountered = true, EncounteredSource = encounter.Source };
         }
 
         return default;
     }
 
-    /// <summary>Turn a successful conversion into an animal, with individual size variance.</summary>
-    private static HarvestResult Take(FoodSource source, Rng rng)
+    /// <summary>
+    /// Turn a successful conversion into an animal, with individual size variance
+    /// scaled by how good the ground is.
+    ///
+    /// Territory quality applies to SIZE rather than to encounter frequency. That
+    /// is not a workaround, it is the correct place for it: encounter rates in a
+    /// good season already sum close to 1, so a frequency multiplier saturates
+    /// and does nothing. Condition, on the other hand, has no ceiling - animals
+    /// in good habitat are simply bigger and fatter, which is both true and the
+    /// thing a prospecting player is actually looking for.
+    /// </summary>
+    private static HarvestResult Take(FoodSource source, Rng rng, float territoryQuality = 1f)
     {
         var entry = FoodTable.Get(source);
 
         float sizeFactor = 0.75f + rng.Stream("harvest.size").NextFloat() * 0.5f;
-        float kg = entry.EdibleKg * sizeFactor;
+        float kg = entry.EdibleKg * sizeFactor * MathF.Sqrt(territoryQuality);
         var (protein, fat) = entry.MacrosForKg(kg);
+
+        // Good ground means animals in good CONDITION, and condition is carried
+        // as fat. This matters far more than it looks: a ceiling-limited player
+        // gains almost nothing from more food, because the ceiling caps what they
+        // can process either way. What they gain from is a better fat-to-protein
+        // ratio, which is exactly what a well-fed animal provides. Scaling only
+        // size would leave prospecting worthless - measured, it was.
+        fat *= territoryQuality * territoryQuality;
 
         return new HarvestResult
         {

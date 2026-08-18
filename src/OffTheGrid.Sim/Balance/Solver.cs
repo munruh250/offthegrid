@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using OffTheGrid.Data;
+using OffTheGrid.Data.Gear;
 using OffTheGrid.Sim.Nutrition;
 using OffTheGrid.Sim.Record;
 using OffTheGrid.Sim.Time;
@@ -19,6 +20,7 @@ public sealed class Scenario
     public int AgeYears { get; init; } = 35;
     public required IReadOnlyDictionary<AttributeKind, int> Attributes { get; init; }
     public required Activity[] Slots { get; init; }
+    public Loadout Gear { get; init; } = Loadout.Standard;
 }
 
 /// <summary>Aggregate outcome of sweeping one scenario.</summary>
@@ -71,7 +73,8 @@ public static class Solver
                 seed: (ulong)i,
                 scenario.Sex, scenario.HeightCm, scenario.AgeYears,
                 scenario.WeightKg, scenario.BodyFatPercent,
-                scenario.Attributes);
+                scenario.Attributes,
+                scenario.Gear);
 
             var plan = new DayPlan { Slots = scenario.Slots };
 
@@ -132,27 +135,52 @@ public static class Solver
             Name = "Ex-Military",
             WeightKg = 84f, BodyFatPercent = 18f,
             Attributes = Attributes(5, 6, 3, 8, 6, 5),
-            Slots = [Activity.ShelterBuild, Activity.HuntingStalk, Activity.Fishing, Activity.Rest, Activity.Rest]
+            // Balanced field kit: can hunt, fish, trap and build.
+            Gear = new Loadout(GearItem.BowAndArrows, GearItem.Axe, GearItem.Saw, GearItem.Knife,
+                               GearItem.SnareWire, GearItem.FishingLineAndHooks, GearItem.Pot,
+                               GearItem.SleepingBag, GearItem.Tarp, GearItem.FerroRod),
+            Slots = [Activity.ShelterBuild, Activity.Fishing, Activity.TrapLine, Activity.WhittleComfortProject, Activity.Rest]
         },
         new()
         {
             Name = "Bushcraft Instructor",
             WeightKg = 88f, BodyFatPercent = 26f,
             Attributes = Attributes(8, 5, 6, 4, 5, 5),
-            Slots = [Activity.ShelterBuild, Activity.Foraging, Activity.Fishing, Activity.Rest, Activity.Rest]
+            // Tools over weapons - no bow. Builds a cabin, cannot take big game.
+            Gear = new Loadout(GearItem.Axe, GearItem.Saw, GearItem.Knife, GearItem.Pot,
+                               GearItem.SnareWire, GearItem.FishingLineAndHooks, GearItem.Paracord,
+                               GearItem.SleepingBag, GearItem.Tarp, GearItem.FerroRod),
+            Slots = [Activity.ShelterBuild, Activity.TrapLine, Activity.Foraging, Activity.WhittleComfortProject, Activity.Rest]
+        },
+        new()
+        {
+            Name = "Commercial Fisherman",
+            WeightKg = 98f, BodyFatPercent = 31f,
+            Attributes = Attributes(5, 6, 3, 5, 6, 8),
+            // The gillnet is the whole plan.
+            Gear = new Loadout(GearItem.Gillnet, GearItem.FishingLineAndHooks, GearItem.Axe,
+                               GearItem.Knife, GearItem.Pot, GearItem.SnareWire, GearItem.Paracord,
+                               GearItem.SleepingBag, GearItem.Tarp, GearItem.FerroRod),
+            Slots = [Activity.ShelterBuild, Activity.Fishing, Activity.TrapLine, Activity.WhittleComfortProject, Activity.Rest]
         },
         new()
         {
             Name = "Endurance Athlete",
             WeightKg = 72f, BodyFatPercent = 12f,
             Attributes = Attributes(3, 4, 4, 9, 7, 6),
-            Slots = [Activity.ShelterBuild, Activity.Fishing, Activity.HuntingStalk, Activity.Rest, Activity.Rest]
+            // Light, mobile kit. The plan is to RANGE - prospect out to better
+            // ground early, then work it. Fitness 9 makes exploring cheap.
+            Gear = new Loadout(GearItem.BowAndArrows, GearItem.Knife, GearItem.SnareWire,
+                               GearItem.FishingLineAndHooks, GearItem.Pot, GearItem.Axe,
+                               GearItem.Paracord, GearItem.SleepingBag, GearItem.Tarp, GearItem.FerroRod),
+            Slots = [Activity.Exploring, Activity.Fishing, Activity.TrapLine, Activity.WhittleComfortProject, Activity.Rest]
         },
         new()
         {
             Name = "Fasting build (idle)",
             WeightKg = 160f, BodyFatPercent = 42f,
             Attributes = Attributes(4, 4, 4, 4, 5, 5),
+            Gear = Loadout.Standard,
             Slots = [Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest]
         }
     ];
