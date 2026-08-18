@@ -1,4 +1,4 @@
-# LAST OUT — Design Session Handoff Summary
+# OFF THE GRID — Design Session Handoff Summary
 
 Session date: August 16–17, 2026
 Current phase: UI/UX direction locked; design system started
@@ -62,7 +62,7 @@ Interactive design studies (all live in browser, respond to day slider):
 
 ### Highest-risk items (take to M0)
 
-- **A1 — Legal review.** The ten-item mechanic, ten-contestant elimination, tap-out language, medical check-in are cumulatively close to source IP. Need real lawyer before store copy. Working title "LAST OUT" is fine.
+- **A1 — Legal review.** The ten-item mechanic, ten-contestant elimination, tap-out language, medical check-in are cumulatively close to source IP. Need real lawyer before store copy. Working title "OFF THE GRID" is fine.
 - **B1 — Protein ceiling legibility.** Full cache, still starving is correct but reads like a cheat. Framing and UI must sell it.
 - **M1 playtest.** Does archery shake read as body failing or game cheating? This is the thesis at stake.
 

@@ -1,4 +1,4 @@
-# LAST OUT — Agent Workflow & Build Verification v0.1
+# OFF THE GRID — Agent Workflow & Build Verification v0.1
 
 *Companion to `02-technical-implementation.md`. This document covers **how code gets written and verified in the repo**, not what the code does. It exists because the tech doc specifies test coverage thoroughly and specifies build verification not at all.*
 
@@ -94,7 +94,7 @@ This is the whole token strategy. It costs nothing to adopt and saves 3–4× on
 Keep it short. A long CLAUDE.md is loaded into every session and is pure overhead — this file is a tax on every task, so it should contain only what is load-bearing.
 
 ```markdown
-# LAST OUT
+# OFF THE GRID
 
 Mobile survival-contest game. Unity 6.3 LTS + URP 2D.
 Design docs in /docs. Read them only when the task requires design context.

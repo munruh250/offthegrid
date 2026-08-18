@@ -1,4 +1,4 @@
-# LAST OUT — Design Spec v0.1
+# OFF THE GRID — Design Spec v0.1
 
 *Working title. Unity, mobile-first, stylised 2D top-down/isometric.*
 

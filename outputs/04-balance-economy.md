@@ -1,4 +1,4 @@
-# LAST OUT — Balance & Economy v0.1
+# OFF THE GRID — Balance & Economy v0.1
 
 *Companion to `01-design-spec.md`. First-pass numbers for food, fuel, shelter and gear attrition, with the reasoning behind each. Every constant here is a tuning knob, not a law. All values sourced from real nutrition and wood-energy data, then adjusted where gameplay required it — deviations are flagged.*
 

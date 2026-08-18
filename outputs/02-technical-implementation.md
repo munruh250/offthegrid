@@ -1,4 +1,4 @@
-# LAST OUT — Technical Implementation v0.1
+# OFF THE GRID — Technical Implementation v0.1
 
 *Build verification, agent workflow, CI structure and logging conventions live in **`05-agent-workflow.md`**. This document specifies what the code does; that one specifies how it gets written and verified.*
 

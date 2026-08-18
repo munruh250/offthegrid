@@ -1,4 +1,4 @@
-# LAST OUT — Discipline Review Pass v0.1
+# OFF THE GRID — Discipline Review Pass v0.1
 
 *Review of `01-design-spec.md` and `02-technical-implementation.md`. Seven roles. Balanced: what's working, what concerns me, what I need.*
 
@@ -39,7 +39,7 @@ The competitive scan was done before the design was locked, not after. That's th
 
 The design is explicitly modelled on a specific trademarked television property. The ten-item mechanic, the ten-contestant elimination format, the tap-out language, the medical check-in, the specific gear master list — cumulatively this is closer to the source than "inspired by." Game *formats* and *mechanics* generally aren't protected, but trademark and trade dress are, and "Alone" is an active mark on a currently-airing show.
 
-Concretely: the working title `LAST OUT` is fine. Using the show's name, its visual identity, its item list verbatim, or marketing copy that positions the game as an adaptation is not. I'm not a lawyer and this needs a real one before any store listing copy is written — but budget for the conversation now, not at soft launch. The cheap outcome is "change some names." The expensive outcome is a takedown two weeks after launch.
+Concretely: the working title `OFF THE GRID` is fine. Using the show's name, its visual identity, its item list verbatim, or marketing copy that positions the game as an adaptation is not. I'm not a lawyer and this needs a real one before any store listing copy is written — but budget for the conversation now, not at soft launch. The cheap outcome is "change some names." The expensive outcome is a takedown two weeks after launch.
 
 **C2 — Monetisation is unresolved and it gates everything else.** ✅ *Resolved — D4: free, biomes + cosmetics.* **New EP item: F2P with paid content packs implies a live-ops content cadence that hasn't been costed.** Q10 is still open, and it determines art budget, live-ops commitment, telemetry volume, and whether scenarios are content packs or free updates. A premium mobile title at ~$6 in 2026 has a brutal discovery problem — you're competing against free with no ad spend. I'd want this decided before M2, not before launch.
 
