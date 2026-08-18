@@ -49,24 +49,23 @@ public sealed class SolverTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void SeedSweepIsCurrentlyDegenerate()
+    public void SeedsProduceDifferentRuns()
     {
-        // Documents a known limitation rather than hiding it: the day loop does
-        // not consume RNG yet, so every seed produces an identical run. This test
-        // should START FAILING once hunt resolution or weather lands - at which
-        // point delete it, because the seed dimension has become real.
-        var outcome = Solver.Sweep(Solver.Archetypes[0], runs: 10);
+        // This replaces SeedSweepIsCurrentlyDegenerate, which asserted the
+        // opposite and was written to fail once harvesting started consuming RNG.
+        // It did. Two runs of the same build now diverge, which is what makes the
+        // seed sweep and the end-condition distribution meaningful.
+        var outcome = Solver.Sweep(Solver.Archetypes[0], runs: 25);
 
-        Assert.Equal(outcome.MinDays, outcome.MaxDays);
+        Assert.True(outcome.MaxDays > outcome.MinDays,
+            $"seeds should diverge; got {outcome.MinDays}-{outcome.MaxDays}");
     }
 
     [Fact]
     public void DominanceCeilingIsMeasurable()
     {
-        // Spec 5.5 sets a 60% ceiling on any single end condition. Not yet
-        // assertable - with no RNG the distribution is degenerate - but the
-        // measurement path exists and reports.
-        var outcome = Solver.Sweep(Solver.Archetypes[0], runs: 5);
+        // Spec 5.5 sets a 60% ceiling on any single end condition.
+        var outcome = Solver.Sweep(Solver.Archetypes[0], runs: 25);
 
         output.WriteLine($"dominant cause: {outcome.DominantCause} at {outcome.DominantShare:P0}");
         Assert.InRange(outcome.DominantShare, 0f, 1f);

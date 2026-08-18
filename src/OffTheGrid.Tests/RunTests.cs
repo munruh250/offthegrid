@@ -32,21 +32,18 @@ public sealed class RunTests
     private static DayPlan WorkingDay(Macros eaten, bool foodInsecure = false) => new()
     {
         Slots = new[] { Activity.ShelterBuild, Activity.Fishing, Activity.Rest, Activity.Rest, Activity.Rest },
-        Eaten = eaten,
-        FoodInsecure = foodInsecure
+        DirectRation = eaten
     };
 
     private static DayPlan AllHeavyDay(Macros eaten) => new()
     {
         Slots = new[] { Activity.HaulingLogs, Activity.ChoppingWood, Activity.Exploring, Activity.HuntingStalk, Activity.Sawing },
-        Eaten = eaten
+        DirectRation = eaten
     };
 
     private static DayPlan IdleDay => new()
     {
-        Slots = new[] { Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest },
-        Eaten = default,
-        FoodInsecure = true
+        Slots = new[] { Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest }
     };
 
     // Roughly a day's worth of bear: fatty, sustainable alone, ~2,780 kcal.
@@ -79,11 +76,19 @@ public sealed class RunTests
     [Fact]
     public void SlotsShrinkAsTheSeasonAdvances()
     {
+        // Fed directly so the run survives long enough to observe the slot curve.
         var run = NewRun();
-        var early = run.StepDay(WorkingDay(BearRation));
+        // Fed directly AND building, so neither starvation nor the idleness
+        // penalty ends the run before the slot curve can be observed.
+        var fed = new DayPlan
+        {
+            Slots = new[] { Activity.ShelterBuild, Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest },
+            DirectRation = new Macros(200f, 400f, 0f)
+        };
 
-        for (int i = 0; i < 58; i++) run.StepDay(WorkingDay(BearRation));
-        var late = run.StepDay(WorkingDay(BearRation));
+        var early = run.StepDay(fed);
+        for (int i = 0; i < 58; i++) run.StepDay(fed);
+        var late = run.StepDay(fed);
 
         Assert.Equal(5, early.SlotsAvailable);
         Assert.Equal(3, late.SlotsAvailable);
@@ -188,7 +193,7 @@ public sealed class RunTests
             resting.StepDay(new DayPlan
             {
                 Slots = new[] { Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest },
-                Eaten = BearRation
+                DirectRation = BearRation
             });
         }
 
@@ -233,7 +238,7 @@ public sealed class RunTests
         var movingDay = new DayPlan
         {
             Slots = new[] { Activity.Exploring, Activity.Exploring, Activity.Exploring },
-            Eaten = default
+            DirectRation = default(Macros)
         };
 
 

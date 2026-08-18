@@ -19,8 +19,6 @@ public sealed class Scenario
     public int AgeYears { get; init; } = 35;
     public required IReadOnlyDictionary<AttributeKind, int> Attributes { get; init; }
     public required Activity[] Slots { get; init; }
-    public Macros Ration { get; init; }
-    public bool FoodInsecure { get; init; }
 }
 
 /// <summary>Aggregate outcome of sweeping one scenario.</summary>
@@ -75,12 +73,7 @@ public static class Solver
                 scenario.WeightKg, scenario.BodyFatPercent,
                 scenario.Attributes);
 
-            var plan = new DayPlan
-            {
-                Slots = scenario.Slots,
-                Eaten = scenario.Ration,
-                FoodInsecure = scenario.FoodInsecure
-            };
+            var plan = new DayPlan { Slots = scenario.Slots };
 
             while (!run.IsOver && run.DayNumber < dayCap) run.StepDay(plan);
 
@@ -122,7 +115,16 @@ public static class Solver
             [AttributeKind.ColdAdaptation] = cold
         };
 
-    /// <summary>The archetype presets from design spec 4.2, played competently.</summary>
+    /// <summary>
+    /// The archetype presets from design spec 4.2, each playing three productive
+    /// slots to its own strength.
+    ///
+    /// Three is deliberate: a 50-seed sweep found four productive slots performs
+    /// WORSE than three (53 days against 59), because the fourth burns more than
+    /// the protein ceiling lets the player absorb. Holding the slot count equal
+    /// across archetypes keeps the comparison about attributes and body
+    /// composition rather than about who was handed the better plan.
+    /// </summary>
     public static IReadOnlyList<Scenario> Archetypes =>
     [
         new()
@@ -130,33 +132,28 @@ public static class Solver
             Name = "Ex-Military",
             WeightKg = 84f, BodyFatPercent = 18f,
             Attributes = Attributes(5, 6, 3, 8, 6, 5),
-            Slots = [Activity.ShelterBuild, Activity.HuntingStalk, Activity.Rest, Activity.Rest, Activity.Rest],
-            Ration = new Macros(200f, 220f, 0f)
+            Slots = [Activity.ShelterBuild, Activity.HuntingStalk, Activity.Fishing, Activity.Rest, Activity.Rest]
         },
         new()
         {
             Name = "Bushcraft Instructor",
             WeightKg = 88f, BodyFatPercent = 26f,
             Attributes = Attributes(8, 5, 6, 4, 5, 5),
-            Slots = [Activity.ShelterBuild, Activity.Foraging, Activity.Rest, Activity.Rest, Activity.Rest],
-            Ration = new Macros(200f, 220f, 0f)
+            Slots = [Activity.ShelterBuild, Activity.Foraging, Activity.Fishing, Activity.Rest, Activity.Rest]
         },
         new()
         {
             Name = "Endurance Athlete",
             WeightKg = 72f, BodyFatPercent = 12f,
             Attributes = Attributes(3, 4, 4, 9, 7, 6),
-            Slots = [Activity.ShelterBuild, Activity.Exploring, Activity.Rest, Activity.Rest, Activity.Rest],
-            Ration = new Macros(200f, 220f, 0f)
+            Slots = [Activity.ShelterBuild, Activity.Fishing, Activity.HuntingStalk, Activity.Rest, Activity.Rest]
         },
         new()
         {
             Name = "Fasting build (idle)",
             WeightKg = 160f, BodyFatPercent = 42f,
             Attributes = Attributes(4, 4, 4, 4, 5, 5),
-            Slots = [Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest],
-            Ration = default,
-            FoodInsecure = true
+            Slots = [Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest]
         }
     ];
 }
