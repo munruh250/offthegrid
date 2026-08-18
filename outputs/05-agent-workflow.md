@@ -18,11 +18,11 @@ The gap is a **feedback loop**. An agent editing C# in a Unity project has no id
 
 ## 2. The core insight — the architecture already solved the hard part
 
-`LastOut.Sim` having zero Unity dependencies is not just good for testability. It is the single most valuable property this repo has for agent work, because it means **most tasks never need to load Unity at all.**
+`OffTheGrid.Sim` having zero Unity dependencies is not just good for testability. It is the single most valuable property this repo has for agent work, because it means **most tasks never need to load Unity at all.**
 
 | Path | Build time | Test time | Needs Unity? |
 |---|---|---|---|
-| `LastOut.Sim` + `LastOut.Tests` | ~2 s | ~5 s | ❌ No |
+| `OffTheGrid.Sim` + `OffTheGrid.Tests` | ~2 s | ~5 s | ❌ No |
 | Unity assemblies | 30–90 s | 60–180 s | ✅ Yes |
 
 A 15–40× faster loop for the majority of the work. **Protect this boundary aggressively** — the moment a `UnityEngine` reference leaks into the sim, the fast path is gone and agent iteration slows by an order of magnitude. The existing CI guard is doing more work than the tech doc credits it for.
@@ -61,10 +61,10 @@ This is the whole token strategy. It costs nothing to adopt and saves 3–4× on
 │   ├── sim.yml                   # fast, every push
 │   └── unity.yml                 # gated, slower
 ├── src/
-│   ├── LastOut.Sim/              # CLAUDE.md (scoped)
-│   ├── LastOut.Data/
-│   └── LastOut.Tests/
-├── unity/LastOut/                # Unity project
+│   ├── OffTheGrid.Sim/              # CLAUDE.md (scoped)
+│   ├── OffTheGrid.Data/
+│   └── OffTheGrid.Tests/
+├── unity/OffTheGrid/                # Unity project
 │   ├── Assets/
 │   │   ├── Scripts/              # CLAUDE.md (scoped)
 │   │   └── Editor/BuildVerify.cs # §6
@@ -73,10 +73,10 @@ This is the whole token strategy. It costs nothing to adopt and saves 3–4× on
 │   ├── verify-sim.sh
 │   ├── verify-unity.sh
 │   └── parse-test-results.py
-└── LastOut.sln
+└── OffTheGrid.sln
 ```
 
-**Nested `CLAUDE.md` files matter here.** A root file plus one in `src/LastOut.Sim/` and one in `unity/LastOut/Assets/Scripts/` lets each side carry its own rules without an agent loading both. The sim file says "never reference UnityEngine"; the Unity file says "never put game logic here."
+**Nested `CLAUDE.md` files matter here.** A root file plus one in `src/OffTheGrid.Sim/` and one in `unity/OffTheGrid/Assets/Scripts/` lets each side carry its own rules without an agent loading both. The sim file says "never reference UnityEngine"; the Unity file says "never put game logic here."
 
 ### 3.1 Branch and PR conventions
 
@@ -101,10 +101,10 @@ Design docs in /docs. Read them only when the task requires design context.
 
 ## Architecture — the one rule that matters
 
-`src/LastOut.Sim/` is a pure C# library with ZERO UnityEngine dependencies.
+`src/OffTheGrid.Sim/` is a pure C# library with ZERO UnityEngine dependencies.
 It is the game. Unity is a renderer and input layer.
 
-- NEVER add a `UnityEngine` using/reference to LastOut.Sim. CI blocks it.
+- NEVER add a `UnityEngine` using/reference to OffTheGrid.Sim. CI blocks it.
 - NEVER put game logic in `unity/`. Presentation and input only.
 - Sim exposes immutable snapshots + a command queue. The view never mutates sim state.
 - Minigames return a normalised scalar 0..1. They do not compute outcomes.
@@ -140,7 +140,7 @@ If a gate fails, fix it — do not describe the failure and stop.
 - Sim types: readonly structs where practical. Avoid LINQ in per-slot paths.
 - Sim-local `Int2`/`Float2` — not Vector2Int, which is a Unity type.
 - No abbreviations in public names. `kcal` and `clo` are domain terms, keep them.
-- Balance constants live in LastOut.Data tables, never inline in logic.
+- Balance constants live in OffTheGrid.Data tables, never inline in logic.
 
 ## Do not
 
@@ -166,7 +166,7 @@ Each skill is a folder with a `SKILL.md`. The pattern: a description precise eno
 ---
 name: sim-verify
 description: Build and test the pure C# simulation library. Use after ANY change
-  to src/LastOut.Sim, src/LastOut.Data, or src/LastOut.Tests. Fast (~7s) — run it
+  to src/OffTheGrid.Sim, src/OffTheGrid.Data, or src/OffTheGrid.Tests. Fast (~7s) — run it
   freely, and always before reporting a sim task complete. Does not require Unity.
 ---
 
@@ -175,8 +175,8 @@ description: Build and test the pure C# simulation library. Use after ANY change
     ./tools/verify-sim.sh
 
 Runs:
-  dotnet build src/LastOut.Sim -warnaserror
-  dotnet test  src/LastOut.Tests --logger "console;verbosity=minimal"
+  dotnet build src/OffTheGrid.Sim -warnaserror
+  dotnet test  src/OffTheGrid.Tests --logger "console;verbosity=minimal"
   ./tools/check-no-unity-refs.sh
 
 ## Interpreting results
@@ -199,7 +199,7 @@ This is the one that was absent and matters most.
 ---
 name: unity-compile
 description: Compile-check the Unity project in batch mode. Use after editing any
-  C# under unity/LastOut/Assets. SLOW (30-90s) and takes an exclusive project
+  C# under unity/OffTheGrid/Assets. SLOW (30-90s) and takes an exclusive project
   lock — batch your edits and run this once, not per file. Required before
   reporting any Unity task complete.
 ---
@@ -211,8 +211,8 @@ description: Compile-check the Unity project in batch mode. Use after editing an
 Wraps:
 
     "$UNITY_PATH" -batchmode -nographics -logFile - \
-      -projectPath unity/LastOut \
-      -executeMethod LastOut.Editor.BuildVerify.CompileCheck \
+      -projectPath unity/OffTheGrid \
+      -executeMethod OffTheGrid.Editor.BuildVerify.CompileCheck \
       -quit
 
 Exit 0 = clean. Non-zero = compile errors, printed as
@@ -247,7 +247,7 @@ description: Run Unity Test Framework tests in batch mode and report results.
 Wraps:
 
     "$UNITY_PATH" -batchmode -nographics -logFile - \
-      -projectPath unity/LastOut \
+      -projectPath unity/OffTheGrid \
       -runTests -testPlatform EditMode \
       -testResults artifacts/unity-tests.xml
 
@@ -273,7 +273,7 @@ That `-quit` interaction is a real and well-known trap, and it produces a *green
 name: balance-check
 description: Run the BalanceAssert suite and, for tuning changes, the solver
   sweeps. Use for ANY change to body/morale/food/wood constants or to
-  LastOut.Sim/Balance. Produces the before/after numbers required in a
+  OffTheGrid.Sim/Balance. Produces the before/after numbers required in a
   balance/ PR body.
 ---
 
@@ -281,11 +281,11 @@ description: Run the BalanceAssert suite and, for tuning changes, the solver
 
 Fast gate (~30s), always:
 
-    dotnet run --project src/LastOut.Sim/Balance -- --assert-only
+    dotnet run --project src/OffTheGrid.Sim/Balance -- --assert-only
 
 Full sweep (minutes to hours), for tuning changes:
 
-    dotnet run --project src/LastOut.Sim/Balance -- \
+    dotnet run --project src/OffTheGrid.Sim/Balance -- \
       --runs 100000 --archetypes all --loadouts sampled \
       --out artifacts/balance-$(git rev-parse --short HEAD).json
 
@@ -313,7 +313,7 @@ description: Verify seed + command log replays to a byte-identical end state.
 
 # Determinism
 
-    dotnet run --project src/LastOut.Sim/Balance -- --replay-verify --seeds 64
+    dotnet run --project src/OffTheGrid.Sim/Balance -- --replay-verify --seeds 64
 
 Asserts byte-identical end state and per-slot quantised hashes across 64 fixed
 seeds on the host runtime.
@@ -344,7 +344,7 @@ using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
 
-namespace LastOut.Editor
+namespace OffTheGrid.Editor
 {
     public static class BuildVerify
     {
@@ -463,11 +463,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with: { dotnet-version: '8.0.x' }
-      - run: dotnet build src/LastOut.Sim -warnaserror
+      - run: dotnet build src/OffTheGrid.Sim -warnaserror
       - run: ./tools/check-no-unity-refs.sh
-      - run: dotnet test src/LastOut.Tests
-      - run: dotnet run --project src/LastOut.Sim/Balance -- --assert-only
-      - run: dotnet run --project src/LastOut.Sim/Balance -- --replay-verify --seeds 64
+      - run: dotnet test src/OffTheGrid.Tests
+      - run: dotnet run --project src/OffTheGrid.Sim/Balance -- --assert-only
+      - run: dotnet run --project src/OffTheGrid.Sim/Balance -- --replay-verify --seeds 64
 ```
 
 **`unity.yml`** — PRs touching `unity/**`, plus nightly. Needs a licence in CI and a self-hosted or licensed runner; slower and more fragile, so it gates rather than blocks every commit.
@@ -484,7 +484,7 @@ Agent-specific, because these are the mistakes that are easy to make and expensi
 
 | Convention | Why |
 |---|---|
-| Balance constants in `LastOut.Data` tables only | An inlined constant is invisible to the solver and to tuning |
+| Balance constants in `OffTheGrid.Data` tables only | An inlined constant is invisible to the solver and to tuning |
 | Readonly structs for sim state | Immutability is load-bearing for the snapshot contract |
 | No LINQ in per-slot paths | Allocation in the tick loop; 100k-run solver amplifies it hugely |
 | Named RNG streams, never reuse | Reuse shifts downstream draws and silently invalidates saved replays |

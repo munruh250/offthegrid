@@ -9,7 +9,7 @@ Status: Ready for next iteration on desktop
 Four complete design documents (all in `/outputs/`):
 
 1. **01-design-spec.md** — 901 lines. The game's complete mechanical spec. Core thesis: difficulty rises because the player's body is failing, not via an authored curve. Single-player with 9 simulated rivals. Six attributes, free-form body setup, decay-driven morale system. Win condition: last man standing.
-2. **02-technical-implementation.md** — 680 lines. Unity 6.3 LTS + URP 2D. Pure-C# sim library (`LastOut.Sim`) with zero UnityEngine dependencies. Determinism at M0, cross-device testing, ~50-row QA matrix per mechanic, `BalanceAssert` suite. Pre-M0 now includes agent workflow and CI setup.
+2. **02-technical-implementation.md** — 680 lines. Unity 6.3 LTS + URP 2D. Pure-C# sim library (`OffTheGrid.Sim`) with zero UnityEngine dependencies. Determinism at M0, cross-device testing, ~50-row QA matrix per mechanic, `BalanceAssert` suite. Pre-M0 now includes agent workflow and CI setup.
 3. **03-discipline-reviews.md** — 450 lines. Seven-role balanced review (EP, Tech Director, Lead Engineer, Lead Designer, QA, Marketing, Analytics). 28 concerns raised, 32 actions, 5 rulings decided and folded in. All open questions tracked.
 4. **04-balance-economy.md** — 459 lines. All numeric values for food, fuel, shelter, gear attrition. Validation includes: competent player reaches day 60 ✓, fasting build defeated by morale not physiology ✓, protein ceiling binds as designed ✓. Morale constants retuned. Tuning-lever priority order specified.
 
@@ -45,7 +45,7 @@ Interactive design studies (all live in browser, respond to day slider):
 ### Milestones (updated)
 
 - **M-pre** (before M0): CLAUDE.md, five skills, BuildVerify.CompileCheck, split CI (sim.yml / unity.yml)
-- **M0:** LastOut.Sim + tests + headless runner + cross-device determinism + BalanceAssert + ISimLog conventions
+- **M0:** OffTheGrid.Sim + tests + headless runner + cross-device determinism + BalanceAssert + ISimLog conventions
 - **M1:** Archery vertical slice — KILL GATE: does starving-player shake read as body failing or game cheating?
 - **M2:** Full day loop, map, fog, camp, gear, 2 minigames, auto-resolve, morale attribution HUD, protein/fat legibility UI, accessibility Tier 1
 - **M3:** Rivals, check-in, weather, events, compression, relocation, preservation, spoilage
@@ -181,17 +181,17 @@ This file:
 │   ├── sim.yml                   # every push, ~1 min
 │   └── unity.yml                 # gated, slower
 ├── src/
-│   ├── LastOut.Sim/              # SCOPED CLAUDE.md
-│   ├── LastOut.Data/
-│   └── LastOut.Tests/
-├── unity/LastOut/                # SCOPED CLAUDE.md
+│   ├── OffTheGrid.Sim/              # SCOPED CLAUDE.md
+│   ├── OffTheGrid.Data/
+│   └── OffTheGrid.Tests/
+├── unity/OffTheGrid/                # SCOPED CLAUDE.md
 │   ├── Assets/Scripts/
 │   └── Editor/BuildVerify.cs
 ├── tools/
 │   ├── verify-sim.sh
 │   ├── verify-unity.sh
 │   └── parse-test-results.py
-└── LastOut.sln
+└── OffTheGrid.sln
 ```
 
 The pure-C# sim boundary is what makes the agent workflow fast — balance work never loads Unity (7s compile loop instead of 90s).

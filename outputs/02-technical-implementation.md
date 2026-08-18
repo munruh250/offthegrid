@@ -29,7 +29,7 @@ Built-In RP is deprecated from 6.5 onward and unsuitable for new titles; URP 2D 
 
 > **The simulation is a pure C# library with zero UnityEngine dependencies.**
 
-`LastOut.Sim` compiles as its own assembly definition (asmdef) referencing nothing from Unity. Unity is a *renderer and input layer* that observes sim state.
+`OffTheGrid.Sim` compiles as its own assembly definition (asmdef) referencing nothing from Unity. Unity is a *renderer and input layer* that observes sim state.
 
 Why this matters more than usual here:
 
@@ -39,7 +39,7 @@ Why this matters more than usual here:
 4. **Determinism.** Required for the Daily Challenge.
 
 ```
-LastOut.Sim/            (asmdef, no Unity refs)
+OffTheGrid.Sim/            (asmdef, no Unity refs)
   Body/                 BMR, thermo, mass partitioning, morale
   World/                Map gen, tiles, depletion, weather
   Actions/              Slot resolution, risk profiles
@@ -48,7 +48,7 @@ LastOut.Sim/            (asmdef, no Unity refs)
   Rng/                  Deterministic PRNG + named streams
   Balance/              Solver harness, headless runner
 
-LastOut.Game/           (Unity)
+OffTheGrid.Game/           (Unity)
   Presentation/         Map view, camp view, card UI
   Minigames/            Archery, Fire, ForageID
   Journal/
@@ -56,9 +56,9 @@ LastOut.Game/           (Unity)
   Accessibility/
   Persistence/
 
-LastOut.Data/           ScriptableObjects + JSON tables
-LastOut.Tests/          NUnit, runs headless in CI
-LastOut.Tools/          Editor: tuning inspector, sim replay viewer
+OffTheGrid.Data/           ScriptableObjects + JSON tables
+OffTheGrid.Tests/          NUnit, runs headless in CI
+OffTheGrid.Tools/          Editor: tuning inspector, sim replay viewer
 ```
 
 ### 2.2 Sim/view contract
@@ -143,7 +143,7 @@ Assert: byte-identical end state and byte-identical
 
 **Requirements:**
 
-- Runs in CI on every commit to `LastOut.Sim`, on real devices (not just editor) — IL2CPP + ARM is the whole point
+- Runs in CI on every commit to `OffTheGrid.Sim`, on real devices (not just editor) — IL2CPP + ARM is the whole point
 - Must include the **server .NET host**, since a client/server mismatch is the failure that produces false cheat flags
 - Must include at least one older ARM device and one current one, plus both iOS and Android
 - Per-slot hashes, not just final state, so divergence is localised to the slot and system that caused it
@@ -158,7 +158,7 @@ Assert: byte-identical end state and byte-identical
 
 **Why M0 specifically:** the cost of converting to fixed-point scales with the size of the sim. At M0 it's a week. At M4 it's a rewrite of the thing every other system depends on, plus revalidation of every balance number produced by the solver in between.
 
-**Server validation** for Daily Challenge submissions: the client uploads the seed and the full command log; the server replays it headless (same `LastOut.Sim` DLL) and verifies the reported result. Cheating requires reproducing a valid command sequence, not editing a score.
+**Server validation** for Daily Challenge submissions: the client uploads the seed and the full command log; the server replays it headless (same `OffTheGrid.Sim` DLL) and verifies the reported result. Cheating requires reproducing a valid command sequence, not editing a score.
 
 ---
 
@@ -522,7 +522,7 @@ Minimal, privacy-respecting, no ad SDKs.
 **Beyond events: every run uploads a full replayable life-cycle record.** Counters say what happened; the record says why, and can be re-interrogated later without shipping new telemetry.
 
 ```csharp
-// LastOut.Sim — no Unity types
+// OffTheGrid.Sim — no Unity types
 public sealed class RunRecord {
     public RunSetup      Setup;        // seed, attributes, loadout, body, biome, mode
     public CommandLog    Decisions;    // the SAME log used for Daily Challenge replay
@@ -577,7 +577,7 @@ None of this is tight — the game is turn-based with 2D sprites. The only real 
 
 ## 13. Testing
 
-`LastOut.Tests` runs headless in CI on every commit.
+`OffTheGrid.Tests` runs headless in CI on every commit.
 
 **Unit:** BMR against published Mifflin–St Jeor values · mass partitioning conserves energy · thermoregulation monotonicity · slot count from daylight across the calendar · morale bounds · RNG stream independence
 
@@ -621,7 +621,7 @@ Full workflow in `05-agent-workflow.md`. The ladder:
 | M | Deliverable | Proves |
 |---|---|---|
 | **M-pre** | `CLAUDE.md` + five verification skills, `BuildVerify.CompileCheck`, split CI (`sim.yml` / `unity.yml`), `ISimLog` (`05-agent-workflow.md` A33–A36) | **The feedback loop exists before the thing it verifies.** Building M0 without it means retrofitting every guarantee. |
-| **M0** | `LastOut.Sim` + tests + headless runner. **No Unity.** Plus: **cross-device determinism test in CI**, `Int2`/`Float2` types, `UnityEngine`-reference CI guard, `RunRecord` schema, **`BalanceAssert` suite + the six solver sweeps** (balance doc §9) | The body model works, is tunable, deterministic on real hardware, **and the fasting build provably loses** |
+| **M0** | `OffTheGrid.Sim` + tests + headless runner. **No Unity.** Plus: **cross-device determinism test in CI**, `Int2`/`Float2` types, `UnityEngine`-reference CI guard, `RunRecord` schema, **`BalanceAssert` suite + the six solver sweeps** (balance doc §9) | The body model works, is tunable, deterministic on real hardware, **and the fasting build provably loses** |
 | **M1** | Archery vertical slice. One map tile, one animal, full shake model, fed vs starving states forced. | **The core feel question.** Kill or continue here. |
 | **M2** | Full day loop, map, fog, camp, gear, **2 minigames (archery + fire)**, auto-resolve path, morale attribution HUD, placeholder art. **Accessibility Tier 1 built in from the first screen. Screen-reader testing starts here.** | The game exists, and its UI is not a retrofit liability |
 | **M3** | Rivals, check-in intel, weather, events, compression, **camp relocation**, compression fuzz harness | The game is a contest |

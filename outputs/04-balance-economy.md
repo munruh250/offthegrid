@@ -419,7 +419,7 @@ When a balance problem appears, this is the priority order. Reaching for the wro
 Every number above needs to be assertable in the headless solver, or it will drift.
 
 ```csharp
-// LastOut.Sim.Balance — all runnable without Unity
+// OffTheGrid.Sim.Balance — all runnable without Unity
 BalanceAssert.FoodYield(species, expectedKcal, tolerance: 0.02f);
 BalanceAssert.ProteinCeilingBinds(FoodSource.Deer, bodyweight: 85f);
 BalanceAssert.WoodDemand(nightTempC: -5f, expectedKgPerDay: 23f);

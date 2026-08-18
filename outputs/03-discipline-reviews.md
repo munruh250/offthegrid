@@ -94,7 +94,7 @@ Turn-based sim with microsecond ticks means performance is a non-issue. That's a
 
 ### Concerns
 
-**C8 — The asmdef boundary will be violated within a month unless it's enforced.** ✅ *Accepted — CI guard and `Int2`/`Float2` moved into M0.* Someone will need "just one" `Vector2` or `Mathf.Clamp` in the sim. Add a CI check that fails the build if `LastOut.Sim` references `UnityEngine`. Cheap, and it's the only thing that keeps the architecture honest.
+**C8 — The asmdef boundary will be violated within a month unless it's enforced.** ✅ *Accepted — CI guard and `Int2`/`Float2` moved into M0.* Someone will need "just one" `Vector2` or `Mathf.Clamp` in the sim. Add a CI check that fails the build if `OffTheGrid.Sim` references `UnityEngine`. Cheap, and it's the only thing that keeps the architecture honest.
 
 `Vector2Int` already appears in the `CampState`/`WorldState` schemas in the tech doc — that's a UnityEngine type. Needs a sim-local `Int2`. Minor, but it's the first violation and it's already in the spec.
 
