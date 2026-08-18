@@ -60,6 +60,31 @@ public sealed class BalanceData
     public float MoraleWeightLossPer5Percent { get; init; } = -0.5f;
     public float MoraleProjectCompleted { get; init; } = 14.0f;
 
+    // ---- Morale: starting value and bands (design spec 5.6) ----
+    public float MoraleStartBase { get; init; } = 70f;
+    public float MoraleStartPerResolve { get; init; } = 3f;
+    public float MoraleMax { get; init; } = 100f;
+    public float MoraleWarningBand { get; init; } = 25f;
+
+    // ---- Morale: sources NOT covered by the doc 7.4 retune ----
+    // [OPEN - B10] Doc 7.4 retuned six constants and states the v0.1 values were
+    // "roughly 2x too harsh". The sources below were left at v0.1. Either the
+    // retune was deliberately partial, or these were missed. The solver should
+    // decide; do not halve them on the strength of the general claim alone.
+    public float MoraleShelterInadequate { get; init; } = -4.0f;
+    public float MoraleSoakedAtSleep { get; init; } = -3.0f;
+    public float MoraleMemoryEventMin { get; init; } = -5.0f;
+    public float MoraleMemoryEventMax { get; init; } = -20.0f;
+    /// <summary>Memory events scale by (1 - Resolve/ResolveDivisor). Design spec 5.6.</summary>
+    public float MoraleMemoryResolveDivisor { get; init; } = 12f;
+
+    // ---- Morale: gains (design spec 5.6) ----
+    public float MoraleLargeFoodSuccess { get; init; } = 10f;
+    public float MoraleShelterMilestone { get; init; } = 12f;
+    public float MoraleBeachcombFind { get; init; } = 5f;
+    public float MoralePhotoPerDay { get; init; } = 2f;
+    public float MoralePhotoLifetimeCap { get; init; } = 20f;
+
     // ---- Relocation (doc 12) ----
     public float ShelterLossMoralePerSlot { get; init; } = 1.0f;
     public float ShelterLossMoraleCap { get; init; } = 10.0f;
