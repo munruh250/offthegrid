@@ -175,20 +175,100 @@ Without the signals this system is strictly worse than what exists now, because 
 
 ## 7. Designer rulings
 
-### C1 — Lethality: **mostly survivable, with a small telegraphed lethal set**
+### C1 — Lethality: **single events CAN be lethal, because they are never dice** ✅ DECIDED
 
-Crises hurt; chains kill. A cache raid puts you behind, a storm soaks you, and the
-fourth thing in the sequence is what ends the run — with the player able to name
-all four places they could have stopped it.
+The original framing of this question was wrong, and the ruling corrects it.
 
-A short list of genuinely lethal events is retained so the woods never feel safe:
-a bad fall, a serious infection. **Every one of them must be the crisis you saw
-coming** — you were told you were getting clumsy and you kept chopping. A lethal
-event with no preceding signal does not ship.
+I offered a choice between "crises hurt, chains kill" and "one bad roll can kill,"
+and treated the second as inherently unfair. It is not — **it is only unfair if it
+is a roll.** The ruling: lethal outcomes are acceptable, on the condition that
+**every one of them is the result of an action the player chose to attempt, with
+the odds shown beforehand.**
 
-This fits the thesis: difficulty comes from the body slowly failing, not from
-sudden events, and a run is only 45–75 minutes — a dice-roll death at minute
-forty is unrecoverable in a way it would not be in a long-session game.
+This is the same question the M1 kill gate asks about archery — *does the starving
+player's shake read as the body failing, or as the game cheating?* — generalised
+to every risky action in the game. The answer is the same in both cases: it reads
+as the body failing **if the player was shown their hands were unsteady and chose
+to shoot anyway.**
+
+#### The Attempt Meter
+
+A single shared interaction, in the shape of a timing bar with a target zone.
+
+```
+CHOPPING          [=========|##|===============]
+                            ^ 5% window
+
+  You are exhausted and badly underfed.
+  Your hands are not steady.        [ SWING ]  [ REST INSTEAD ]
+```
+
+**The sim sets the difficulty; the player decides whether to attempt it.** Green
+zone width is a function of body condition, fatigue, the relevant attribute, and
+tool quality. Being weak does not roll against you — it *narrows the window*.
+
+**Failure severity scales with how badly the attempt was missed**, not with a
+separate roll. Clipping the edge of the zone is a glancing blow and a lost slot.
+Missing it completely, with an axe, at 5%, is the injury that ends the run.
+
+#### Why this changes the lethality answer
+
+A dice-roll death is something that *happened to* the player. A missed 5% window
+is something they *did*, having been told it was 5%. The first is unrecoverable
+as a design problem; the second is the best kind of loss a survival game has,
+because the player can name the exact moment and would make a different call next
+time.
+
+It also means the difficulty curve becomes **tactile rather than statistical**.
+Nothing needs to be authored: as the body degrades, the windows narrow, and the
+player feels the decline in their thumbs.
+
+#### The meter's presence is itself the warning
+
+The meter does **not** appear on every action. It appears only when risk crosses a
+threshold — which means:
+
+- **Early run:** almost no meters. Actions simply succeed. The game feels smooth.
+- **Late run:** meters everywhere, and narrow. The game feels precarious.
+
+The first time a meter appears on an action that was previously automatic is a
+signal in itself, and it needs no text to land: *something has changed, and it is
+you.* This is the emergent-difficulty thesis expressed as an interaction rather
+than as a number.
+
+#### Reconciling this with auto-resolve and accessibility
+
+Design spec §9 ships only two full minigames (archery and fire) and auto-resolves
+five of seven activities. The Attempt Meter is **not** a minigame — it is a
+lightweight commit interaction, one shared component reused across chopping,
+hauling, climbing, water crossings and stalking. That is what makes it affordable
+against §9's scope.
+
+Three rules keep it fair:
+
+1. **Auto-resolve uses identical odds.** A player who turns the meter off is not
+   playing an easier or harder game, only a less tactile one. If auto-resolve had
+   better odds the meter would be a punishment for engaging.
+2. **The odds are shown either way.** Auto-resolve still surfaces *"chopping at
+   5% — proceed, or rest?"*. The consent is the confirmation, not the timing bar.
+3. **Accessibility Tier 1 gets a non-timing variant** (a hold-and-release, or a
+   confirmation at stated odds) rather than being pushed onto auto-resolve. The
+   decision must remain available to everyone; only the dexterity is optional.
+
+#### What still needs a resolution
+
+Exploration hazards — a slip on wet rock, a fall crossing a creek — are harder,
+because there is no natural swing or shot to hang a meter on. Options:
+
+- A **route-commit** interaction: choose the safe line or the fast line, with the
+  meter on the crossing itself
+- Terrain difficulty shown *before* entering a tile, so entering is the decision
+  and the meter resolves it
+- Accept that some exploration risk is ambient, and cap it at non-lethal
+
+> `[Open C6]` Which of these, or a fourth. The principle is settled — no lethal
+> outcome without a player action — so this is about finding the action, not about
+> whether one is required.
 
 ### C2 — Readouts: **both number and text, on dedicated screens** ✅ DECIDED
 
