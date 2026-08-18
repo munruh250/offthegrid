@@ -31,7 +31,14 @@ public enum GearItem
     SleepingBag,
     Tarp,
     Paracord,
-    FerroRod
+    FerroRod,
+
+    /// <summary>
+    /// A photograph of home. Design spec 5.6 gives it +2 morale/day to a lifetime
+    /// cap of 20. It was previously a DayPlan flag with no way for a player to
+    /// actually choose it, which made one of the specced items unobtainable.
+    /// </summary>
+    Photograph
 }
 
 /// <summary>

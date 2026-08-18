@@ -194,6 +194,9 @@ public sealed class Run
         return true;
     }
 
+    /// <summary>Accumulated injury. Design spec 5.5's incident end condition.</summary>
+    public float InjuryBurden { get; private set; }
+
     /// <summary>Firewood in hand, kg. Balance doc 4.</summary>
     public float WoodKg { get; private set; }
 
@@ -394,6 +397,7 @@ public sealed class Run
         bool soaked = plan.SoakedAtSleep;
         bool voluntaryTapOut = false;
         bool gearIsDry = false;
+        bool severeInjury = false;
 
         switch (acute.Kind)
         {
@@ -405,6 +409,12 @@ public sealed class Run
                 break;
             case AcuteEventKind.Injury:
                 slots = Math.Max(1, slots - (int)acute.Magnitude);
+                InjuryBurden += acute.Magnitude;
+                // A bad injury, or an accumulation of them on a wasted body, ends
+                // the run. EndCondition.Incident was previously unreachable - the
+                // sim could not produce one of its own four documented endings.
+                if (acute.Magnitude > 2.75f && Rng.Stream("events.injurysevere").NextFloat() < 0.18f * (2f - BodyConditionRatio))
+                    severeInjury = true;
                 break;
         }
 
@@ -514,7 +524,12 @@ public sealed class Run
         float woodDemand = Firewood.NightlyDemandKg(NightTempForDay(DayNumber), Shelter);
         float woodBurned = Math.Min(WoodKg, woodDemand);
         WoodKg -= woodBurned;
-        LastFireQuality = woodDemand <= 0f ? 1f : woodBurned / woodDemand;
+
+        // Getting the fire lit at all is a gear question. GearEffects.
+        // FireReliability existed and was called from nowhere, which made the
+        // ferro rod a strictly dead pick.
+        float reliability = GearEffects.FireReliability(Gear);
+        LastFireQuality = (woodDemand <= 0f ? 1f : woodBurned / woodDemand) * reliability;
 
         // Cold costs calories, not just morale - and the fire is what stands
         // between the player and that bill.
@@ -568,7 +583,7 @@ public sealed class Run
         ShelterTriggerDays = (CloDemandTonight(DayNumber) - warmth) > b.CloGapThreshold
             ? ShelterTriggerDays + 1 : 0;
 
-        var end = CheckEndConditions(b, voluntaryTapOut);
+        var end = CheckEndConditions(b, voluntaryTapOut, severeInjury);
         if (end != EndCondition.None) Finish(end);
 
         Record.DaysSurvived = DayNumber;
@@ -596,8 +611,9 @@ public sealed class Run
     }
 
     /// <summary>Design spec 6. Checked in a fixed order so the recorded cause is deterministic.</summary>
-    private EndCondition CheckEndConditions(BalanceData b, bool voluntaryTapOut)
+    private EndCondition CheckEndConditions(BalanceData b, bool voluntaryTapOut, bool severeInjury)
     {
+        if (severeInjury) return EndCondition.Incident;
         if (voluntaryTapOut || Morale.HasTappedOut) return EndCondition.TapOut;
 
         if (Body.BodyFatPercent < Body.Sex.MedicalPullBodyFatPercent()) return EndCondition.MedicalPull;
@@ -622,6 +638,7 @@ public sealed class Run
     /// </summary>
     private string DeriveCauseCode(EndCondition end)
     {
+        if (end == EndCondition.Incident) return "incident.injury";
         if (end != EndCondition.TapOut) return "medical.wasting";
 
         var top = Morale.Breakdown().TopMovers(1).Top;
