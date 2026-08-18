@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAST OUT — Screen Mockups v0.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0F0C; --panel:#141A16; --panel2:#1B231D; --line:#26302A;
+  --text:#E2DFD2; --dim:#8D9A7E; --faint:#55604F; --hot:#B4622E;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:'Archivo',system-ui,sans-serif;line-height:1.55;padding-bottom:100px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 22px}
+
+header{padding:56px 0 34px}
+.eyebrow{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin-bottom:16px;font-weight:600}
+h1{font-size:clamp(38px,7vw,64px);font-weight:700;line-height:1;letter-spacing:-.015em;text-transform:uppercase;margin-bottom:16px}
+.lede{max-width:64ch;color:var(--dim);font-size:15.5px}
+.lede strong{color:var(--text);font-weight:500}
+
+/* season control */
+.control{
+  position:sticky;top:0;z-index:50;background:rgba(11,15,12,.94);
+  backdrop-filter:blur(12px);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:16px 0;margin-bottom:40px
+}
+.control-in{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ctl-lbl{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:600;flex:0 0 auto}
+input[type=range]{
+  flex:1;min-width:200px;-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;
+  background:linear-gradient(90deg,#B4622E,#6E8494);outline:none
+}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--text);cursor:pointer;border:2px solid var(--bg)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--text);cursor:pointer;border:2px solid var(--bg)}
+input[type=range]:focus-visible{outline:2px solid var(--hot);outline-offset:4px}
+.ctl-read{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;flex:0 0 auto;min-width:190px}
+.ctl-read span{color:var(--dim);font-weight:400}
+
+section{margin-bottom:56px}
+.shead{display:flex;align-items:baseline;gap:14px;margin-bottom:6px;flex-wrap:wrap}
+.snum{font-size:10.5px;color:var(--hot);letter-spacing:.14em;font-weight:600;padding-top:5px}
+h2{font-size:27px;font-weight:700;text-transform:uppercase;letter-spacing:.01em}
+.sdesc{color:var(--dim);font-size:14px;max-width:72ch;margin-bottom:26px}
+
+.screens{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:34px 26px}
+.slot h3{font-size:15px;font-weight:600;margin:14px 0 4px}
+.slot p{font-size:12.5px;color:var(--dim);line-height:1.5}
+.slot p em{color:var(--hot);font-style:normal}
+
+/* phone */
+.phone{
+  width:100%;max-width:310px;aspect-ratio:310/640;border-radius:22px;overflow:hidden;
+  position:relative;border:1px solid var(--line);box-shadow:0 18px 44px rgba(0,0,0,.5);
+  display:flex;flex-direction:column;font-size:13px
+}
+.status{height:22px;flex:0 0 22px;display:flex;align-items:center;justify-content:space-between;padding:0 13px;font-size:8.5px;font-variant-numeric:tabular-nums;opacity:.45}
+.scene{flex:1;position:relative;overflow:hidden}
+.sky{position:absolute;inset:0}
+.ridge{position:absolute;left:0;right:0;bottom:0;height:50%}
+.ridge svg{width:100%;height:100%;display:block}
+.glow{position:absolute;left:50%;bottom:14%;width:140px;height:140px;transform:translateX(-50%);border-radius:50%;filter:blur(28px);pointer-events:none}
+.ui{position:absolute;inset:0;display:flex;flex-direction:column;padding:11px}
+
+.row{display:flex;align-items:center;gap:8px}
+.sp{flex:1}
+.num{font-variant-numeric:tabular-nums}
+.lbl{font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+.big{font-size:15px;font-weight:500;line-height:1.1}
+.card{border-radius:3px;padding:10px 11px}
+.tag{font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:2.5px 5px;border-radius:2px;display:inline-block}
+.bar{height:3px;border-radius:2px;overflow:hidden;position:relative}
+.bar b{position:absolute;left:0;top:0;bottom:0}
+.pips{display:flex;gap:4px}
+.pip{height:4px;flex:1;border-radius:1px;max-width:26px}
+
+/* tokens */
+.tok{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.tokcard{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:18px}
+.tokcard h4{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--hot);margin-bottom:14px;font-weight:600}
+.tokrow{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12.5px}
+.tokrow:last-child{border:0}
+.tokrow span:last-child{color:var(--dim);font-variant-numeric:tabular-nums;text-align:right;flex:0 0 auto}
+.chip{display:inline-block;width:13px;height:13px;border-radius:2px;vertical-align:-2px;margin-right:7px;border:1px solid rgba(255,255,255,.14)}
+
+.callout{border-left:2px solid var(--hot);padding:3px 0 3px 16px;margin:28px 0;font-size:14px;color:var(--dim);max-width:68ch}
+.callout strong{color:var(--text);font-weight:500}
+footer{border-top:1px solid var(--line);padding-top:30px;color:var(--faint);font-size:12.5px;max-width:70ch}
+footer p{margin-bottom:11px}
+@media(prefers-reduced-motion:no-preference){.reticle{animation:wob 2.6s ease-in-out infinite}}
+@keyframes wob{0%,100%{transform:translate(0,0)}25%{transform:translate(5px,-3px)}50%{transform:translate(-3px,4px)}75%{transform:translate(4px,3px)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Last Out · Screen mockups · v0.2</div>
+  <h1>Cedar to<br>Cold Front</h1>
+  <p class="lede">Corner Vitals HUD, Archivo throughout, and <strong>one palette that migrates across the run</strong>. September is cedar and lichen; November is slate and fog. Drag the slider — every screen below shifts with it. Same components, same tokens, different world.</p>
+</header>
+
+<div class="control">
+  <div class="wrap" style="padding:0 22px">
+    <div class="control-in">
+      <label class="ctl-lbl" for="day">Day</label>
+      <input type="range" id="day" min="1" max="60" value="34" aria-describedby="dayread">
+      <div class="ctl-read" id="dayread">Day 34 · <span id="season">Lean season</span></div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="shead"><span class="snum">01</span><h2>The day loop</h2></div>
+  <p class="sdesc">Corner Vitals in practice. Four anchors, each tappable to expand. The centre of the screen belongs to the world and the action card — nothing permanent sits there.</p>
+  <div class="screens" id="s1"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="snum">02</span><h2>Body and morale</h2></div>
+  <p class="sdesc">The two systems most likely to read as the game cheating. Both get the same treatment: show the itemised cause, in plain language, at the moment it moves.</p>
+  <div class="screens" id="s2"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="snum">03</span><h2>Doing things</h2></div>
+  <p class="sdesc">Map, minigame, and the end-of-day compression card. The archery screen is the one that has to survive M1.</p>
+  <div class="screens" id="s3"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="snum">04</span><h2>The contest</h2></div>
+  <p class="sdesc">Intel is a resource. Rivals are never directly visible — the check-in is the only window, and it costs half a day.</p>
+  <div class="screens" id="s4"></div>
+</section>
+
+<div class="callout">
+  <strong>The seasonal ramp does real work.</strong> It isn't decoration — it's a second, non-numeric channel telling the player how far into the run they are and how much trouble they're in. A screenshot from day 8 and one from day 52 are unmistakably different places. It also means the palette itself carries the decay thesis, which is the cheapest possible way to make a mobile survival game feel like it has a story arc.
+</div>
+
+<section>
+  <div class="shead"><span class="snum">05</span><h2>Tokens</h2></div>
+  <p class="sdesc">What a designer or an agent needs to build any new screen consistently. Colour values interpolate on a single <code>t</code> from 0 to 1 across the run, so there are only two palettes to maintain, not sixty.</p>
+  <div class="tok" id="tokens"></div>
+</section>
+
+<footer>
+  <p><strong>Accessibility.</strong> Tier 1 from M2 means every corner vital carries a semantic label, focus order runs clockwise from top-left, and expanding a vital announces its full breakdown. The seasonal ramp must never be the only carrier of information — every state it signals is also stated in text somewhere on screen.</p>
+  <p><strong>Contrast.</strong> Cedar's fog on mid sits near the edge of AA at small sizes. Body text uses <em>snow</em>, never <em>fog</em>, below 13px. Fog is for labels at 600 weight and above only.</p>
+</footer>
+
+</div>
+
+<script>
+/* ---------- seasonal palette ---------- */
+const CEDAR = {bg:'#151812',mid:'#2C3327',fog:'#8D9A7E',snow:'#E2DFD2',warm:'#B4622E',alarm:'#9C3B28'};
+const COLD  = {bg:'#0D141B',mid:'#1B2833',fog:'#6E8494',snow:'#DCE5EA',warm:'#C4632A',alarm:'#B8453C'};
+
+const hx = h => [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const mix = (a,b,t) => { const A=hx(a),B=hx(b);
+  return '#'+[0,1,2].map(i=>Math.round(A[i]+(B[i]-A[i])*t).toString(16).padStart(2,'0')).join(''); };
+const pal = t => Object.fromEntries(Object.keys(CEDAR).map(k=>[k,mix(CEDAR[k],COLD[k],t)]));
+
+/* day -> state */
+function state(d){
+  const t = Math.min(1,Math.max(0,(d-1)/59));
+  const season = d<=20?'Salmon run':d<=35?'Run tapering':d<=50?'Lean season':'Winter';
+  const slots  = d<=14?5:d<=32?4:3;
+  const wt     = +(85 - (85-65.6)*Math.pow(t,.85)).toFixed(1);
+  const bf     = +(20 - (20-11.6)*Math.pow(t,.9)).toFixed(1);
+  const morale = Math.round(78 - 40*Math.pow(t,1.15));
+  const temp   = Math.round(12 - 17*t);
+  const cache  = d<=20?7:d<=35?5:d<=50?3:2;
+  const rivals = Math.max(1, 10 - Math.round(9*Math.pow(t,.75)));
+  return {t,d,season,slots,wt,bf,morale,temp,cache,rivals,c:pal(t)};
+}
+
+/* ---------- shared bits ---------- */
+function ridge(c){
+  return '<svg viewBox="0 0 310 200" preserveAspectRatio="none">'
+   +'<path d="M0,118 L44,62 L82,94 L124,38 L178,90 L222,54 L268,102 L310,70 L310,200 L0,200 Z" fill="'+c.mid+'" opacity=".82"/>'
+   +'<path d="M0,148 L58,108 L106,138 L162,102 L220,140 L272,116 L310,144 L310,200 L0,200 Z" fill="'+c.bg+'" opacity=".92"/></svg>';
+}
+function shell(s, inner, opts){
+  const c=s.c, o=opts||{};
+  const bg = o.flat
+    ? '<div class="sky" style="background:'+c.bg+'"></div>'
+    : '<div class="sky" style="background:linear-gradient('+mix(c.mid,'#000000',.45)+' 0%,'+c.mid+' 44%,'+c.bg+' 100%)"></div>'
+      +'<div class="ridge">'+ridge(c)+'</div>'
+      +'<div class="glow" style="background:'+c.warm+';opacity:'+(o.fire===false?0:.42)+'"></div>';
+  return '<div class="phone" style="background:'+c.bg+'">'
+   +'<div class="status" style="color:'+c.fog+'"><span>9:41</span><span>\u25AE\u25AE\u25AE</span></div>'
+   +'<div class="scene">'+bg+'<div class="ui">'+inner+'</div></div></div>';
+}
+const pips = (s,used) => { let h='<div class="pips">';
+  for(let i=0;i<s.slots;i++) h+='<div class="pip" style="background:'+(i<used?s.c.warm:'rgba(255,255,255,.15)')+'"></div>';
+  return h+'</div>'; };
+const bar = (p,col) => '<div class="bar" style="background:rgba(255,255,255,.12)"><b style="width:'+p+'%;background:'+col+'"></b></div>';
+
+/* corner vitals — the signature component */
+function corners(s){
+  const c=s.c;
+  const mcol = s.morale<25 ? c.alarm : c.snow;
+  return '<div class="row" style="align-items:flex-start">'
+    +'<div><div class="big" style="color:'+c.snow+'">Day '+s.d+'</div>'
+      +'<div class="lbl" style="color:'+c.fog+'">SLOT 2 OF '+s.slots+'</div></div>'
+    +'<div class="sp"></div>'
+    +'<div style="text-align:right"><div class="big num" style="color:'+mcol+'">'+s.morale+'</div>'
+      +'<div class="lbl" style="color:'+c.fog+'">MORALE</div></div></div>';
+}
+function cornersBottom(s){
+  const c=s.c;
+  return '<div class="row" style="align-items:flex-end">'
+    +'<div><div class="big num" style="color:'+c.snow+'">'+s.cache+'d</div>'
+      +'<div class="lbl" style="color:'+c.fog+'">CACHE</div></div>'
+    +'<div class="sp"></div>'
+    +'<div style="text-align:right"><div class="big num" style="color:'+(s.temp<0?c.snow:c.fog)+'">'+s.temp+'\u00B0</div>'
+      +'<div class="lbl" style="color:'+c.fog+'">TONIGHT</div></div></div>';
+}
+
+/* ---------- screens ---------- */
+const SCREENS = {
+
+camp: s => { const c=s.c; return shell(s,
+  corners(s)
+  +'<div class="sp"></div>'
+  +'<div class="card" style="background:rgba(0,0,0,.58);border:1px solid rgba(255,255,255,.1);margin-bottom:10px">'
+    +'<div style="font-size:15px;font-weight:600;color:'+c.snow+';margin-bottom:3px">Check the snare line</div>'
+    +'<div style="font-size:11px;color:'+c.fog+';line-height:1.45;margin-bottom:9px">Two hours out along the creek. The far three haven\u2019t been touched in four days.</div>'
+    +'<div class="row" style="gap:5px;flex-wrap:wrap">'
+      +'<span class="tag" style="background:rgba(255,255,255,.09);color:'+c.fog+'">1 slot</span>'
+      +'<span class="tag" style="background:rgba(255,255,255,.09);color:'+c.fog+'">\u2212420 kcal</span>'
+      +'<span class="tag" style="background:'+c.alarm+'26;color:'+c.alarm+'">Cold exposure</span></div></div>'
+  +cornersBottom(s)
+  +'<div style="margin-top:9px">'+pips(s,2)+'</div>'
+)},
+
+morale: s => { const c=s.c; const rows=[
+    ['Base decay','\u22121.0',c.fog],['No cached surplus','\u22122.0',c.alarm],
+    ['Idle 3 days running','\u22121.0',c.alarm],['Weight lost','\u22120.5',c.fog],
+    ['Shelter finished','+14.0',c.warm]];
+  return shell(s,
+  '<div class="row"><div class="lbl" style="color:'+c.fog+'">MORALE</div><div class="sp"></div>'
+   +'<div class="lbl" style="color:'+c.fog+'">CLOSE \u2715</div></div>'
+  +'<div style="margin:14px 0 4px"><span style="font-size:38px;font-weight:700;color:'+(s.morale<25?c.alarm:c.snow)+'" class="num">'+s.morale+'</span>'
+   +'<span style="font-size:13px;color:'+c.fog+';margin-left:7px">today '+(s.t>.3?'\u22123.5':'+9.5')+'</span></div>'
+  +'<div style="margin-bottom:16px">'+bar(s.morale,s.morale<25?c.alarm:c.fog)+'</div>'
+  +rows.map(r=>'<div class="row" style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)">'
+      +'<span style="font-size:12px;color:'+c.snow+'">'+r[0]+'</span><div class="sp"></div>'
+      +'<span class="num" style="font-size:12px;font-weight:500;color:'+r[2]+'">'+r[1]+'</span></div>').join('')
+  +'<div class="sp"></div>'
+  +'<div class="card" style="background:rgba(255,255,255,.05);border-left:2px solid '+c.warm+'">'
+   +'<div style="font-size:11.5px;color:'+c.fog+';line-height:1.5">You haven\u2019t finished anything in three days. Even a small project would help.</div></div>'
+, {flat:true})},
+
+nutrition: s => { const c=s.c; return shell(s,
+  '<div class="row"><div class="lbl" style="color:'+c.fog+'">TODAY\u2019S FOOD</div><div class="sp"></div>'
+   +'<div class="lbl" style="color:'+c.fog+'">CLOSE \u2715</div></div>'
+  +'<div style="margin:16px 0 6px"><span style="font-size:34px;font-weight:700;color:'+c.snow+'" class="num">1,112</span>'
+   +'<span style="font-size:12px;color:'+c.fog+';margin-left:6px">of 2,850 needed</span></div>'
+  +'<div style="margin-bottom:18px">'+bar(39,c.alarm)+'</div>'
+  +'<div class="lbl" style="color:'+c.fog+';margin-bottom:7px">PROTEIN</div>'
+  +'<div style="position:relative;margin-bottom:5px">'+bar(100,c.alarm)
+    +'<div style="position:absolute;left:84%;top:-4px;bottom:-4px;width:1px;background:'+c.snow+'"></div></div>'
+  +'<div class="row" style="margin-bottom:16px"><span style="font-size:10px;color:'+c.alarm+'">252 g eaten</span>'
+   +'<div class="sp"></div><span style="font-size:10px;color:'+c.fog+'">ceiling 212 g</span></div>'
+  +'<div class="lbl" style="color:'+c.fog+';margin-bottom:7px">FAT</div>'
+  +'<div style="margin-bottom:20px">'+bar(14,c.warm)+'</div>'
+  +'<div class="card" style="background:'+c.alarm+'1F;border-left:2px solid '+c.alarm+'">'
+   +'<div style="font-size:13px;font-weight:600;color:'+c.snow+';margin-bottom:4px">You\u2019re eating enough. It\u2019s the wrong thing.</div>'
+   +'<div style="font-size:11.5px;color:'+c.fog+';line-height:1.5">Lean meat past your limit doesn\u2019t count. You need fat \u2014 marrow, organs, oily fish.</div></div>'
+  +'<div class="sp"></div>'
+  +'<div class="row" style="gap:5px"><span class="tag" style="background:rgba(255,255,255,.09);color:'+c.fog+'">Cache: 41 kg deer</span></div>'
+, {flat:true})},
+
+map: s => { const c=s.c;
+  const tiles = [[0,.9],[1,.7],[2,.3],[3,0],[4,.5],[5,.15],[6,0],[7,.6],[8,.35],[9,0],[10,.8],[11,.2]];
+  return shell(s,
+  corners(s)
+  +'<div class="sp"></div>'
+  +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:12px">'
+   + tiles.map(([i,y])=>{
+       const fogged = y===0;
+       return '<div style="aspect-ratio:1;border-radius:2px;background:'+(fogged?'rgba(255,255,255,.05)':c.mid)
+        +';border:1px solid rgba(255,255,255,.07);position:relative;overflow:hidden">'
+        + (fogged?'':'<div style="position:absolute;left:4px;bottom:4px;right:4px;height:2px;background:rgba(255,255,255,.15)">'
+           +'<div style="height:100%;width:'+(y*100)+'%;background:'+(y>.5?c.warm:c.fog)+'"></div></div>')
+        + (i===5?'<div style="position:absolute;inset:0;border:1px solid '+c.snow+';border-radius:2px"></div>':'')
+        +'</div>';
+     }).join('')
+  +'</div>'
+  +'<div class="card" style="background:rgba(0,0,0,.58);border:1px solid rgba(255,255,255,.1);margin-bottom:10px">'
+   +'<div style="font-size:13px;font-weight:600;color:'+c.snow+';margin-bottom:3px">Creek bend \u00B7 hunted out</div>'
+   +'<div style="font-size:11px;color:'+c.fog+';line-height:1.45">Sign is old. Nothing fresh in four days. The ridge north is still unscouted.</div></div>'
+  +cornersBottom(s)
+)},
+
+archery: s => { const c=s.c;
+  const shake = .25 + .55*s.t;
+  return shell(s,
+  '<div class="row"><div class="lbl" style="color:'+c.fog+'">BLACKTAIL \u00B7 32 M</div><div class="sp"></div>'
+   +'<div class="lbl" style="color:'+c.alarm+'">'+(s.t>.5?'HANDS SHAKING':'STEADY')+'</div></div>'
+  +'<div class="sp"></div>'
+  +'<div style="position:relative;height:150px;margin-bottom:14px">'
+    +'<svg viewBox="0 0 280 150" style="position:absolute;inset:0;width:100%;height:100%">'
+      +'<path d="M20,132 Q108,50 196,86" fill="none" stroke="'+c.snow+'" stroke-width="1.2" stroke-dasharray="3 4" opacity=".5"/>'
+      +'<path d="M196,86 Q228,98 250,116" fill="none" stroke="'+c.snow+'" stroke-width="1.2" stroke-dasharray="3 4" opacity=".12"/>'
+    +'</svg>'
+    +'<div class="reticle" style="position:absolute;left:60%;top:44%;width:'+(22+shake*26)+'px;height:'+(22+shake*26)+'px;'
+      +'margin-left:-'+(11+shake*13)+'px;margin-top:-'+(11+shake*13)+'px;border:1.5px solid '+c.snow+';border-radius:50%;opacity:.8"></div>'
+  +'</div>'
+  +'<div class="lbl" style="color:'+c.fog+';margin-bottom:6px">DRAW</div>'
+  +'<div style="margin-bottom:14px">'+bar(72,c.warm)+'</div>'
+  +'<div class="row" style="gap:5px;flex-wrap:wrap">'
+   +'<span class="tag" style="background:rgba(255,255,255,.09);color:'+c.fog+'">6 arrows</span>'
+   +'<span class="tag" style="background:rgba(255,255,255,.09);color:'+c.fog+'">Bow 78%</span>'
+   +(s.t>.4?'<span class="tag" style="background:'+c.alarm+'26;color:'+c.alarm+'">Energy low</span>':'')+'</div>'
+, {fire:false})},
+
+summary: s => { const c=s.c; return shell(s,
+  '<div class="lbl" style="color:'+c.fog+'">END OF DAY '+s.d+'</div>'
+  +'<div style="font-size:22px;font-weight:700;color:'+c.snow+';margin:10px 0 16px;line-height:1.15">'
+   +(s.t>.6?'Cold came early.':'A good haul, and dry wood.')+'</div>'
+  +[['Morale',(s.t>.3?'\u22123.5':'+9.5'),(s.t>.3?c.alarm:c.warm)],
+    ['Weight','\u22120.4 kg',c.fog],
+    ['Cache',s.cache+' days',c.fog]].map(r=>
+    '<div class="row" style="padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
+     +'<span style="font-size:12.5px;color:'+c.snow+'">'+r[0]+'</span><div class="sp"></div>'
+     +'<span class="num" style="font-size:12.5px;font-weight:500;color:'+r[2]+'">'+r[1]+'</span></div>').join('')
+  +'<div style="font-size:11px;color:'+c.fog+';padding:9px 0">and 6 smaller changes</div>'
+  +'<div class="sp"></div>'
+  +'<div class="card" style="background:rgba(255,255,255,.05)">'
+   +'<div style="font-size:11.5px;color:'+c.fog+';line-height:1.55;font-style:italic">'
+   +(s.t>.6?'Frost on the tarp when I woke. The creek is running thin.':'Two fish on the rack. First night I haven\u2019t gone to bed hungry.')+'</div></div>'
+, {flat:true})},
+
+checkin: s => { const c=s.c;
+  const rivals = [['Contestant 02','Strong','\u2014'],['Contestant 05','Holding',c.fog],['Contestant 07','Struggling',c.alarm]];
+  return shell(s,
+  '<div class="lbl" style="color:'+c.fog+'">MEDICAL CHECK-IN \u00B7 DAY '+s.d+'</div>'
+  +'<div style="font-size:20px;font-weight:700;color:'+c.snow+';margin:10px 0 14px">'+s.rivals+' still out</div>'
+  +'<div class="row" style="gap:14px;margin-bottom:16px">'
+   +'<div><div class="big num" style="color:'+c.snow+'">'+s.wt+'</div><div class="lbl" style="color:'+c.fog+'">KG</div></div>'
+   +'<div><div class="big num" style="color:'+(s.bf<12?c.alarm:c.snow)+'">'+s.bf+'%</div><div class="lbl" style="color:'+c.fog+'">BODY FAT</div></div>'
+   +'<div><div class="big num" style="color:'+c.snow+'">'+(s.morale<25?'Low':'Fair')+'</div><div class="lbl" style="color:'+c.fog+'">MORALE</div></div></div>'
+  +'<div class="lbl" style="color:'+c.fog+';margin-bottom:8px">WHAT THE MEDIC SAW</div>'
+  + rivals.map(r=>'<div class="row" style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)">'
+     +'<span style="font-size:12px;color:'+c.snow+'">'+r[0]+'</span><div class="sp"></div>'
+     +'<span style="font-size:11px;color:'+(r[2]===c.alarm?c.alarm:c.fog)+'">'+r[1]+'</span></div>').join('')
+  +'<div class="sp"></div>'
+  +'<div class="card" style="background:rgba(255,255,255,.05);border-left:2px solid '+(s.bf<12?c.alarm:c.warm)+'">'
+   +'<div style="font-size:11.5px;color:'+c.fog+';line-height:1.5">'
+   +(s.bf<12?'Body fat is approaching the pull threshold. One more bad week and this ends without your say.':'Cleared to continue. Weight loss is within range.')+'</div></div>'
+, {flat:true})},
+
+ending: s => { const c=s.c; return shell(s,
+  '<div class="lbl" style="color:'+c.fog+'">DAY '+s.d+' \u00B7 FOURTH OUT</div>'
+  +'<div style="font-size:26px;font-weight:700;color:'+c.snow+';margin:12px 0 12px;line-height:1.12">You called it in at first light.</div>'
+  +'<div style="font-size:12.5px;color:'+c.fog+';line-height:1.6;margin-bottom:18px">'
+   +'You\u2019d been in deficit for nineteen straight days. The cache was never empty \u2014 there just wasn\u2019t any fat in it.</div>'
+  +'<div class="lbl" style="color:'+c.fog+';margin-bottom:8px">WHERE IT TURNED</div>'
+  +'<div class="card" style="background:rgba(255,255,255,.05);margin-bottom:16px">'
+   +'<div style="font-size:12px;color:'+c.snow+';margin-bottom:3px">Day 19 \u2014 you left the salmon run early</div>'
+   +'<div style="font-size:11px;color:'+c.fog+';line-height:1.45">Six fish still on the rack. The run closed four days later.</div></div>'
+  +'<div class="sp"></div>'
+  +'<div class="lbl" style="color:'+c.fog+';margin-bottom:8px">WHAT ENDED YOUR RUN?</div>'
+  +'<div class="row" style="gap:5px;flex-wrap:wrap">'
+   +['Starvation','Cold','Morale','Injury'].map(x=>'<span class="tag" style="background:rgba(255,255,255,.09);color:'+c.snow+';padding:6px 9px">'+x+'</span>').join('')
+  +'</div>'
+, {flat:true})},
+
+loadout: s => { const c=s.c;
+  const picks=[['Sleeping bag',1],['Ferro rod',1],['Axe',1],['Saw',1],['2.5 qt pot',1],['Line & 35 hooks',1],['Gill net',1],['Bow & 6 arrows',1],['Multi-tool',0],['Paracord 45 m',0]];
+  return shell(s,
+  '<div class="row"><div class="lbl" style="color:'+c.fog+'">CHOOSE 10</div><div class="sp"></div>'
+   +'<div class="lbl" style="color:'+c.warm+'">8 CHOSEN</div></div>'
+  +'<div style="font-size:18px;font-weight:700;color:'+c.snow+';margin:10px 0 4px">Vancouver Island</div>'
+  +'<div style="font-size:11.5px;color:'+c.fog+';line-height:1.5;margin-bottom:14px">Temperate rainforest. Salmon run for the first three weeks. Wet, not yet cold.</div>'
+  + picks.map(p=>'<div class="row" style="padding:6.5px 0;border-bottom:1px solid rgba(255,255,255,.06)">'
+     +'<span style="width:11px;height:11px;border-radius:2px;border:1px solid '+(p[1]?c.warm:'rgba(255,255,255,.22)')+';background:'+(p[1]?c.warm:'transparent')+';margin-right:9px;flex:0 0 auto"></span>'
+     +'<span style="font-size:12px;color:'+(p[1]?c.snow:c.fog)+'">'+p[0]+'</span></div>').join('')
+  +'<div class="sp"></div>'
+  +'<div style="font-size:10.5px;color:'+c.fog+';line-height:1.5">Gear multiplies what you\u2019re already good at. It won\u2019t cover a weakness.</div>'
+, {flat:true})}
+};
+
+const LAYOUT = [
+  ['s1',[['camp','Camp \u00B7 day loop','Four corners, one card, nothing permanent in the middle. The action card carries its <em>risk tags</em> so no outcome arrives unannounced.'],
+         ['map','Map \u00B7 fog and yield','Scouted tiles show a yield bar that visibly thins as they\u2019re hunted out. This is the signal that has to fire before relocation is offered.'],
+         ['loadout','Loadout','Biome shown before the pick, as specified. The line at the bottom is the whole gear philosophy in one sentence.']]],
+  ['s2',[['morale','Morale \u00B7 expanded','Tapping the morale corner opens the itemised breakdown. <em>Attribution, not forecast</em> \u2014 it teaches the causal link instead of predicting a number.'],
+         ['nutrition','Food \u00B7 protein ceiling','The highest-risk screen in the game. The ceiling marker on the protein bar plus one plain sentence is what stops this reading as a cheat.'],
+         ['summary','End of day','Two or three largest movers, the rest batched. Closes on a line of journal voice.']]],
+  ['s3',[['archery','Archery','Reticle wobble scales with the shake model \u2014 drag the slider and watch it grow as the body fails. <em>This screen is the M1 gate.</em>'],
+         ['checkin','Medical check-in','Costs half a day and is the only window onto rivals. The medic\u2019s line is also the medical-pull warning.'],
+         ['ending','End of run','Names the cause in story, not rules. The last prompt feeds the 70% cause-of-death gate.']]],
+  ['s4',[]]
+];
+
+function tokens(s){
+  const c=s.c;
+  const swatch = (n,v)=>'<div class="tokrow"><span><span class="chip" style="background:'+v+'"></span>'+n+'</span><span>'+v.toUpperCase()+'</span></div>';
+  return [
+   '<div class="tokcard"><h4>Colour \u00B7 day '+s.d+'</h4>'
+    +swatch('bg',c.bg)+swatch('mid',c.mid)+swatch('fog',c.fog)+swatch('snow',c.snow)+swatch('warm',c.warm)+swatch('alarm',c.alarm)
+    +'</div>',
+   '<div class="tokcard"><h4>Type \u00B7 Archivo</h4>'
+    +[['Display','700 / 32 / \u22121%'],['Title','700 / 22'],['Heading','600 / 15'],['Body','400 / 13'],['Number','500 / 15 tabular'],['Label','600 / 8.5 / +14%'],['Micro','400 / 11']]
+      .map(r=>'<div class="tokrow"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join('')
+    +'</div>',
+   '<div class="tokcard"><h4>Space & shape</h4>'
+    +[['Base unit','4 px'],['Screen padding','11 px'],['Card padding','10 / 11'],['Card radius','3 px'],['Tag radius','2 px'],['Bar height','3 px'],['Slot pip','4 px']]
+      .map(r=>'<div class="tokrow"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join('')
+    +'</div>',
+   '<div class="tokcard"><h4>Rules</h4>'
+    +[['warm','fire & food only'],['alarm','threshold crossed'],['fog','labels \u2265600 wt'],['snow','all body text'],['Ramp t','(day\u22121)/59'],['Tap target','\u226544 px']]
+      .map(r=>'<div class="tokrow"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join('')
+    +'</div>'
+  ].join('');
+}
+
+function render(){
+  const d = +document.getElementById('day').value;
+  const s = state(d);
+  document.getElementById('dayread').innerHTML = 'Day '+d+' \u00B7 <span>'+s.season+' \u00B7 '+s.slots+' slots</span>';
+  LAYOUT.forEach(([id,items])=>{
+    const el = document.getElementById(id); if(!el||!items.length) return;
+    el.innerHTML = items.map(([k,title,note])=>
+      '<div class="slot">'+SCREENS[k](s)+'<h3>'+title+'</h3><p>'+note+'</p></div>').join('');
+  });
+  document.getElementById('s4').innerHTML =
+    '<div class="slot">'+SCREENS.checkin(s)+'<h3>Check-in \u00B7 rivals</h3><p>Standings only, never live positions. Half a day spent to learn where you sit.</p></div>';
+  document.getElementById('tokens').innerHTML = tokens(s);
+}
+document.getElementById('day').addEventListener('input',render);
+render();
+</script>
+</body>
+</html>

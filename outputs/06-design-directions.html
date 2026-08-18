@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAST OUT — Visual Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Archivo:wght@400;500;600;700&family=Alegreya+Sans:wght@300;400;500;700&family=Zilla+Slab:wght@400;500;600;700&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0C1116; --surface:#141B22; --surface2:#1B242C; --line:#26323C;
+  --text:#DCE5EA; --dim:#7D909D; --faint:#4A5A66; --accent:#C4632A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:'Archivo',system-ui,sans-serif;
+  line-height:1.55; padding:0 0 120px;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+
+/* ---------- header ---------- */
+header{padding:64px 0 44px;border-bottom:1px solid var(--line);margin-bottom:52px}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:20px
+}
+h1{
+  font-family:'Barlow Condensed',sans-serif;font-weight:600;
+  font-size:clamp(46px,9vw,86px);line-height:.94;letter-spacing:-.01em;
+  text-transform:uppercase;margin-bottom:18px
+}
+h1 em{font-style:normal;color:var(--accent)}
+.lede{max-width:62ch;color:var(--dim);font-size:16px}
+.lede strong{color:var(--text);font-weight:500}
+
+/* ---------- sections ---------- */
+section{margin-bottom:64px;scroll-margin-top:20px}
+.shead{display:flex;align-items:baseline;gap:16px;margin-bottom:8px;flex-wrap:wrap}
+.snum{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);
+  letter-spacing:.15em;padding-top:6px
+}
+h2{
+  font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:32px;
+  text-transform:uppercase;letter-spacing:.02em
+}
+.sdesc{color:var(--dim);font-size:14.5px;max-width:70ch;margin-bottom:26px}
+
+/* ---------- option grids ---------- */
+.grid{display:grid;gap:14px}
+.g-pal{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+.g-hud{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+.g-typ{grid-template-columns:repeat(auto-fit,minmax(255px,1fr))}
+
+.opt{
+  background:var(--surface);border:1px solid var(--line);border-radius:3px;
+  padding:16px;cursor:pointer;transition:border-color .16s,background .16s;
+  text-align:left;color:inherit;font:inherit;width:100%;display:block;
+}
+.opt:hover{border-color:#3C4C58;background:var(--surface2)}
+.opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--surface2)}
+.opt-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.opt-name{
+  font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:19px;
+  text-transform:uppercase;letter-spacing:.04em
+}
+.opt-key{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint)}
+.opt-note{font-size:12.5px;color:var(--dim);line-height:1.45}
+.opt[aria-pressed="true"] .opt-key{color:var(--accent)}
+
+/* palette swatches */
+.sw{display:flex;height:38px;border-radius:2px;overflow:hidden;margin:12px 0 10px}
+.sw span{flex:1}
+.hexes{
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--faint);
+  display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px
+}
+
+/* hud wireframes */
+.wire{
+  height:104px;border:1px solid var(--line);border-radius:2px;margin:12px 0 10px;
+  position:relative;background:#0F151A;overflow:hidden
+}
+.wire i{position:absolute;background:#33434F;display:block;border-radius:1px}
+.wire i.hot{background:var(--accent);opacity:.8}
+.wire i.dim{background:#1F2A33}
+
+/* type specimens */
+.spec-d{font-size:30px;line-height:1.05;margin-bottom:6px}
+.spec-b{font-size:13px;line-height:1.5;color:var(--dim);margin-bottom:8px}
+.spec-u{font-size:10.5px;letter-spacing:.1em;color:var(--faint)}
+
+/* ---------- preview ---------- */
+.pv-layout{display:grid;grid-template-columns:340px 1fr;gap:36px;align-items:start}
+@media(max-width:820px){.pv-layout{grid-template-columns:1fr}}
+
+.phone{
+  width:320px;height:660px;border-radius:26px;overflow:hidden;position:relative;
+  border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.55);
+  display:flex;flex-direction:column;margin:0 auto;
+}
+.notch{height:26px;flex:0 0 26px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:9.5px;opacity:.5}
+
+/* scene */
+.scene{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.sky{position:absolute;inset:0}
+.ridge{position:absolute;left:0;right:0;bottom:0;height:52%}
+.ridge svg{width:100%;height:100%;display:block}
+.fireglow{
+  position:absolute;left:50%;bottom:16%;width:150px;height:150px;transform:translateX(-50%);
+  border-radius:50%;filter:blur(26px);opacity:.5;pointer-events:none
+}
+
+/* generic hud bits */
+.hud{position:relative;z-index:2;display:flex;flex-direction:column;height:100%;padding:12px}
+.row{display:flex;align-items:center;gap:8px}
+.spacer{flex:1}
+.pips{display:flex;gap:5px}
+.pip{width:22px;height:5px;border-radius:1px}
+.bar{height:4px;border-radius:2px;overflow:hidden;position:relative}
+.bar b{position:absolute;left:0;top:0;bottom:0;display:block}
+.card{border-radius:2px;padding:10px 11px}
+.tag{font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;padding:2px 5px;border-radius:1px;display:inline-block}
+.lbl{font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;opacity:.6}
+.num{font-variant-numeric:tabular-nums}
+
+.pv-side h3{
+  font-family:'Barlow Condensed',sans-serif;font-size:22px;text-transform:uppercase;
+  letter-spacing:.03em;margin-bottom:6px
+}
+.combo{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);
+  margin-bottom:18px;letter-spacing:.04em
+}
+.readout{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}
+.readout dt{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:5px
+}
+.readout dd{font-size:13.5px;color:var(--dim);margin-bottom:15px;max-width:52ch}
+.readout dd strong{color:var(--text);font-weight:500}
+
+.callout{
+  border-left:2px solid var(--accent);padding:2px 0 2px 15px;margin:26px 0;
+  font-size:14px;color:var(--dim);max-width:66ch
+}
+.callout strong{color:var(--text);font-weight:500}
+
+footer{border-top:1px solid var(--line);padding-top:34px;color:var(--faint);font-size:13px;max-width:72ch}
+footer p{margin-bottom:12px}
+@media (prefers-reduced-motion:no-preference){
+  .phone,.opt{transition:all .18s ease}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Last Out · Visual direction study · v0.1</div>
+  <h1>Five ways to<br>look <em>cold</em></h1>
+  <p class="lede">Three axes you can mix independently — <strong>palette</strong>, <strong>HUD layout</strong>, <strong>type</strong>. Pick one from each row and the phone below renders that combination with real day-34 game state. Nothing here is a finished screen; it's a way to argue about direction before anyone opens Figma.</p>
+</header>
+
+<section>
+  <div class="shead"><span class="snum">01</span><h2>Palette</h2></div>
+  <p class="sdesc">All five are built from the reference: desaturated blue-slate, fog, snow, and a warm accent held in reserve. The variable is how much warmth is allowed in, and where it comes from.</p>
+  <div class="grid g-pal" id="palGrid"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="snum">02</span><h2>HUD layout</h2></div>
+  <p class="sdesc">The constraint that shapes all of these: a day is 3–7 slots, and the player needs calories, morale, temperature, cache and slot count legible at a glance without the screen becoming a cockpit. Each layout resolves that tension differently.</p>
+  <div class="grid g-hud" id="hudGrid"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="snum">03</span><h2>Type</h2></div>
+  <p class="sdesc">Two roles minimum — a display face for headings and day markers, a utility face for numbers. Numbers matter unusually much here, so tabular figures are non-negotiable in whichever face carries the readouts.</p>
+  <div class="grid g-typ" id="typGrid"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="snum">04</span><h2>Preview</h2></div>
+  <p class="sdesc">Day 34, slot 2 of 4. Late lean season, morale falling, protein ceiling binding, cache down to three days. A deliberately uncomfortable moment to test a HUD against.</p>
+  <div class="pv-layout">
+    <div><div class="phone" id="phone"></div></div>
+    <div class="pv-side">
+      <h3 id="pvTitle">—</h3>
+      <div class="combo" id="pvCombo">—</div>
+      <dl class="readout" id="pvNotes"></dl>
+    </div>
+  </div>
+</section>
+
+<div class="callout">
+  <strong>One idea worth stealing regardless of which direction wins:</strong> reserve saturated warm colour for fire and food alone. Everything else in the interface stays in the blue-grey range. Warmth becomes a resource the screen itself is short of, and a well-fed camp looks visibly different from a failing one before the player reads a single number. It costs nothing and it carries the thesis.
+</div>
+
+<footer>
+  <p><strong>On the reference image.</strong> Colour palettes aren't protectable and drawing on that register is fine. The title lockup, the specific typographic treatment and the key-art composition are a different matter — those are trade dress on a currently-airing show. Worth keeping clear of when this reaches store assets, and worth flagging to whoever picks up action A1.</p>
+  <p>Fonts shown are Google Fonts stand-ins chosen for licence-free evaluation. Any of them can be swapped for a licensed equivalent once a direction is settled — the pairing logic is what's being tested here, not the specific families.</p>
+</footer>
+
+</div>
+
+<script>
+const PALETTES = [
+  { key:'cold-front', name:'Cold Front', note:'The reference, taken literally. Near-monochrome slate and fog. One ember accent, used only for fire.',
+    c:{bg:'#0D141B',mid:'#1B2833',fog:'#6E8494',snow:'#DCE5EA',warm:'#C4632A',alarm:'#B8453C'},
+    hexes:['#0D141B','#1B2833','#6E8494','#DCE5EA','#C4632A'] },
+  { key:'fieldbook', name:'Fieldbook', note:'Dark board, aged paper, graphite. The interface as the contestant\u2019s own journal rather than a game overlay.',
+    c:{bg:'#14171A',mid:'#242A2E',fog:'#8A8577',snow:'#D8CFBC',warm:'#A8582F',alarm:'#8C3A2C'},
+    hexes:['#14171A','#242A2E','#8A8577','#D8CFBC','#A8582F'] },
+  { key:'vitals', name:'Vitals', note:'Medical telemetry. Near-black, pale mint readouts, amber caution. Cold and clinical \u2014 which is what a medical pull is.',
+    c:{bg:'#080A0B',mid:'#131819',fog:'#7E938E',snow:'#C8DAD5',warm:'#C9A227',alarm:'#D8443C'},
+    hexes:['#080A0B','#131819','#7E938E','#C8DAD5','#C9A227'] },
+  { key:'cedar', name:'Cedar & Lichen', note:'September, not November. Cedar brown, moss, pale lichen, bone. Warmer and more survivable-looking.',
+    c:{bg:'#151812',mid:'#2C3327',fog:'#8D9A7E',snow:'#E2DFD2',warm:'#B4622E',alarm:'#9C3B28'},
+    hexes:['#151812','#2C3327','#8D9A7E','#E2DFD2','#B4622E'] },
+  { key:'woodcut', name:'Woodcut', note:'Two-tone printmaking. Heavy ink, bone paper, one red. Reads hard at phone size and ages well.',
+    c:{bg:'#0E0E0D',mid:'#20211E',fog:'#7A7A72',snow:'#E6E2D6',warm:'#A32E22',alarm:'#A32E22'},
+    hexes:['#0E0E0D','#20211E','#7A7A72','#E6E2D6','#A32E22'] }
+];
+
+const HUDS = [
+  { key:'slot-rail', name:'Slot Rail', note:'The day is a row of pips that burns down. Vitals live in a thin top edge. Most screen left to the world.',
+    wire:[[8,8,60,4],[76,8,40,4],[8,84,26,6,'hot'],[38,84,26,6],[68,84,26,6,'dim'],[98,84,26,6,'dim']] },
+  { key:'corner', name:'Corner Vitals', note:'Almost chromeless. Four corner readouts, tap any to expand. Maximum world, minimum furniture.',
+    wire:[[8,8,34,4],[8,16,22,3],[100,8,34,4],[8,90,30,4],[96,90,38,4]] },
+  { key:'cluster', name:'Instrument Cluster', note:'Everything visible at once in a dense bottom panel. No hunting for numbers, at the cost of screen.',
+    wire:[[8,64,120,32,'dim'],[12,68,32,4],[48,68,32,4],[84,68,40,4],[12,78,52,4],[12,86,110,4,'hot']] },
+  { key:'margin', name:'Journal Margin', note:'Diegetic. State is written in the page margin in the contestant\u2019s hand. Slowest to read, strongest in tone.',
+    wire:[[96,10,36,3],[96,18,28,3],[96,26,32,3],[8,10,74,60,'dim'],[96,86,30,3]] },
+  { key:'ambient', name:'Ambient', note:'No numbers unless asked. Desaturation, vignette and fire-glow carry state. Bold, and risky on legibility.',
+    wire:[[30,26,76,52,'dim'],[52,44,32,14,'hot']] }
+];
+
+const TYPES = [
+  { key:'condensed', name:'Condensed + Mono', note:'Barlow Condensed for headings, IBM Plex Mono for every number. Tight, technical, expedition-report.',
+    display:"'Barlow Condensed',sans-serif", body:"'Archivo',sans-serif", util:"'IBM Plex Mono',monospace",
+    dWeight:600, dTransform:'uppercase', dSpacing:'.03em' },
+  { key:'oldstyle', name:'Old-style + Humanist', note:'EB Garamond with Alegreya Sans. Literary and warm \u2014 leans into the journal as the real reward.',
+    display:"'EB Garamond',serif", body:"'Alegreya Sans',sans-serif", util:"'IBM Plex Mono',monospace",
+    dWeight:500, dTransform:'none', dSpacing:'0' },
+  { key:'slab', name:'Slab + Grotesk', note:'Zilla Slab against Archivo. Sturdy and field-guide-ish. Holds up at small sizes on a phone.',
+    display:"'Zilla Slab',serif", body:"'Archivo',sans-serif", util:"'IBM Plex Mono',monospace",
+    dWeight:600, dTransform:'none', dSpacing:'0' },
+  { key:'single', name:'Single Family', note:'Archivo alone across five weights. Disciplined and cheap to localise \u2014 fewer files, fewer surprises in CJK.',
+    display:"'Archivo',sans-serif", body:"'Archivo',sans-serif", util:"'Archivo',sans-serif",
+    dWeight:700, dTransform:'uppercase', dSpacing:'.02em' },
+  { key:'hand', name:'Hand + Grotesk', note:'Caveat for journal voice, Archivo for everything functional. Only works if the hand is rationed hard.',
+    display:"'Caveat',cursive", body:"'Archivo',sans-serif", util:"'IBM Plex Mono',monospace",
+    dWeight:600, dTransform:'none', dSpacing:'0' }
+];
+
+const NOTES = {
+  'slot-rail':['Slot rail','The pip row <strong>is</strong> the difficulty curve. In September it shows five; by November, three. The player watches the day get shorter without being told.'],
+  'corner':['Corner vitals','Trades glanceability for immersion. Needs the tap-to-expand morale breakdown to be genuinely good, since that panel is doing all the explanatory work.'],
+  'cluster':['Instrument cluster','The safest choice and the least atmospheric. Best fit if playtesting shows people can\u2019t name their cause of death \u2014 the 70% gate.'],
+  'margin':['Journal margin','Strongest tone, weakest at speed. Probably wrong for the day loop, possibly perfect for the end-of-day summary card.'],
+  'ambient':['Ambient','The real risk. Beautiful, and one bad playtest away from being unreadable. Would need a numeric fallback in settings regardless.'],
+  'cold-front':['Cold Front','Closest to the reference. The danger is monotony over a 60-minute run \u2014 needs the seasonal shift to carry visible colour change.'],
+  'fieldbook':['Fieldbook','Warm paper against dark board reads well at night, which is when most mobile sessions happen.'],
+  'vitals':['Vitals','Thematically sharp: the body as instrument. May read as too cold to spend an hour in.'],
+  'cedar':['Cedar & Lichen','The only palette that looks survivable. Useful if the early game needs to feel generous before it turns.'],
+  'woodcut':['Woodcut','Highest contrast, best at small size, most distinctive in a store listing. Least room for atmospheric nuance.'],
+  'condensed':['Condensed + Mono','Numbers are unambiguous and the headings stay compact \u2014 helpful when slot labels get long in German.'],
+  'oldstyle':['Old-style + Humanist','Beautiful in the journal, harder to read at 11px in daylight on a phone. Test outdoors before committing.'],
+  'slab':['Slab + Grotesk','The pragmatic pick. Nothing here will surprise anyone, and nothing will break.'],
+  'single':['Single family','One family, five weights. Cheapest to ship and to localise; least characterful.'],
+  'hand':['Hand + Grotesk','Ration the hand to journal entries and memory events only. Anywhere else it undercuts the seriousness.']
+};
+
+let sel = { pal:PALETTES[0], hud:HUDS[0], typ:TYPES[0] };
+
+function swatch(p){ return '<div class="sw">'+p.hexes.map(h=>'<span style="background:'+h+'"></span>').join('')+'</div>'; }
+function wire(h){
+  return '<div class="wire">'+h.wire.map(w=>{
+    const cls = w[4] ? ' class="'+w[4]+'"' : '';
+    return '<i'+cls+' style="left:'+w[0]+'px;top:'+w[1]+'px;width:'+w[2]+'px;height:'+w[3]+'px"></i>';
+  }).join('')+'</div>';
+}
+
+function build(gridId, items, kind, render){
+  const g = document.getElementById(gridId);
+  g.innerHTML = items.map((it,i)=>
+    '<button class="opt" role="button" aria-pressed="'+(i===0)+'" data-kind="'+kind+'" data-i="'+i+'">'
+    + '<div class="opt-top"><span class="opt-name">'+it.name+'</span><span class="opt-key">'+String(i+1).padStart(2,'0')+'</span></div>'
+    + render(it)
+    + '<p class="opt-note">'+it.note+'</p></button>').join('');
+  g.addEventListener('click', e=>{
+    const b = e.target.closest('.opt'); if(!b) return;
+    [...g.querySelectorAll('.opt')].forEach(x=>x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+    sel[kind] = items[+b.dataset.i];
+    paint();
+  });
+}
+
+build('palGrid', PALETTES, 'pal', p => swatch(p) + '<div class="hexes">'+p.hexes.join('  ')+'</div>');
+build('hudGrid', HUDS, 'hud', h => wire(h));
+build('typGrid', TYPES, 'typ', t =>
+  '<div class="spec-d" style="font-family:'+t.display+';font-weight:'+t.dWeight+';text-transform:'+t.dTransform+';letter-spacing:'+t.dSpacing+'">Day 34</div>'
+  + '<div class="spec-b" style="font-family:'+t.body+'">The cache is down to three days and the fish are gone.</div>'
+  + '<div class="spec-u" style="font-family:'+t.util+'">73.2 KG · 15.4% BF · \u22121\u00B0C</div>');
+
+/* ---------------- preview ---------------- */
+function ridgeSVG(c){
+  return '<svg viewBox="0 0 320 200" preserveAspectRatio="none">'
+  + '<path d="M0,120 L46,64 L84,96 L128,40 L182,92 L228,56 L276,104 L320,72 L320,200 L0,200 Z" fill="'+c.mid+'" opacity=".85"/>'
+  + '<path d="M0,150 L60,110 L110,140 L168,104 L226,142 L280,118 L320,146 L320,200 L0,200 Z" fill="'+c.bg+'" opacity=".9"/>'
+  + '</svg>';
+}
+
+function paint(){
+  const {pal,hud,typ} = sel, c = pal.c;
+  const D = 'font-family:'+typ.display+';font-weight:'+typ.dWeight+';text-transform:'+typ.dTransform+';letter-spacing:'+typ.dSpacing;
+  const U = 'font-family:'+typ.util+'';
+  const B = 'font-family:'+typ.body+'';
+
+  const scene =
+    '<div class="sky" style="background:linear-gradient(#0c1218 0%,'+c.mid+' 46%,'+c.bg+' 100%)"></div>'
+    + '<div class="ridge">'+ridgeSVG(c)+'</div>'
+    + '<div class="fireglow" style="background:'+c.warm+'"></div>';
+
+  const pips = n => { let s='<div class="pips">';
+    for(let i=0;i<4;i++) s+='<div class="pip" style="background:'+(i<n?c.warm:'rgba(255,255,255,.16)')+'"></div>';
+    return s+'</div>'; };
+
+  const bar = (pct,col) => '<div class="bar" style="background:rgba(255,255,255,.12)"><b style="width:'+pct+'%;background:'+col+'"></b></div>';
+
+  let hudHTML = '';
+
+  if(hud.key==='slot-rail'){
+    hudHTML =
+      '<div class="row" style="gap:12px"><div style="'+U+';font-size:9px;letter-spacing:.14em;color:'+c.snow+'">D34</div>'
+      + '<div style="flex:1">'+bar(41,c.fog)+'</div>'
+      + '<div style="'+U+';font-size:9px;color:'+c.fog+'" class="num">73.2<span style="opacity:.5">KG</span></div>'
+      + '<div style="'+U+';font-size:9px;color:'+c.fog+'" class="num">\u22121\u00B0</div></div>'
+      + '<div class="spacer"></div>'
+      + '<div class="card" style="background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.09);margin-bottom:11px">'
+        + '<div style="'+D+';font-size:17px;color:'+c.snow+';margin-bottom:3px">Check the snares</div>'
+        + '<div style="'+B+';font-size:11px;color:'+c.fog+';margin-bottom:8px">Two hours out. The far line hasn\u2019t been touched in four days.</div>'
+        + '<span class="tag" style="background:rgba(255,255,255,.08);color:'+c.fog+'">1 slot</span> '
+        + '<span class="tag" style="background:'+c.alarm+'22;color:'+c.alarm+'">Cold exposure</span></div>'
+      + '<div class="row" style="justify-content:space-between;align-items:flex-end">'
+        + pips(2)
+        + '<div style="'+U+';font-size:8.5px;letter-spacing:.12em;color:'+c.fog+'">2 / 4 SLOTS</div></div>';
+  }
+
+  if(hud.key==='corner'){
+    hudHTML =
+      '<div class="row"><div><div style="'+D+';font-size:20px;color:'+c.snow+'">Day 34</div>'
+        + '<div style="'+U+';font-size:8.5px;letter-spacing:.12em;color:'+c.fog+'">SLOT 2 OF 4</div></div>'
+      + '<div class="spacer"></div>'
+      + '<div style="text-align:right"><div style="'+U+';font-size:15px;color:'+c.snow+'" class="num">41</div>'
+        + '<div style="'+U+';font-size:8px;letter-spacing:.12em;color:'+c.fog+'">MORALE</div></div></div>'
+      + '<div class="spacer"></div>'
+      + '<div class="row" style="align-items:flex-end">'
+        + '<div><div style="'+U+';font-size:15px;color:'+c.snow+'" class="num">3d</div>'
+          + '<div style="'+U+';font-size:8px;letter-spacing:.12em;color:'+c.fog+'">CACHE</div></div>'
+        + '<div class="spacer"></div>'
+        + '<div style="text-align:right"><div style="'+U+';font-size:15px;color:'+c.warm+'" class="num">\u22121\u00B0</div>'
+          + '<div style="'+U+';font-size:8px;letter-spacing:.12em;color:'+c.fog+'">TONIGHT</div></div></div>';
+  }
+
+  if(hud.key==='cluster'){
+    const cell = (v,l,col)=>'<div style="flex:1"><div style="'+U+';font-size:14px;color:'+(col||c.snow)+'" class="num">'+v+'</div>'
+      + '<div style="'+U+';font-size:7.5px;letter-spacing:.12em;color:'+c.fog+'">'+l+'</div></div>';
+    hudHTML =
+      '<div class="row"><div style="'+D+';font-size:18px;color:'+c.snow+'">Day 34</div></div>'
+      + '<div class="spacer"></div>'
+      + '<div class="card" style="background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1)">'
+        + '<div class="row" style="margin-bottom:9px">'+cell('73.2','KG')+cell('15.4','BF %')+cell('41','MORALE',c.alarm)+cell('3d','CACHE')+'</div>'
+        + '<div style="margin-bottom:4px">'+bar(41,c.alarm)+'</div>'
+        + '<div style="margin-bottom:9px">'+bar(62,c.fog)+'</div>'
+        + '<div class="row" style="gap:6px"><span class="tag" style="background:'+c.warm+'22;color:'+c.warm+'">Protein ceiling</span>'
+        + '<span class="tag" style="background:rgba(255,255,255,.08);color:'+c.fog+'">\u22121\u00B0 · 4.6 clo</span></div>'
+      + '</div>'
+      + '<div class="row" style="margin-top:10px">'+pips(2)+'</div>';
+  }
+
+  if(hud.key==='margin'){
+    hudHTML =
+      '<div class="row" style="height:100%;gap:10px">'
+      + '<div style="flex:1"></div>'
+      + '<div style="width:104px;border-left:1px solid rgba(255,255,255,.14);padding-left:11px;display:flex;flex-direction:column;height:100%">'
+        + '<div style="'+D+';font-size:'+(typ.key==='hand'?'26px':'17px')+';color:'+c.snow+';margin-bottom:12px">Day 34</div>'
+        + '<div style="'+B+';font-size:11px;color:'+c.fog+';line-height:1.6">Down to three days of dried meat.<br><br>Ate well. Still weak.<br><br>Frost on the tarp.</div>'
+        + '<div class="spacer"></div>'
+        + '<div style="'+U+';font-size:8px;letter-spacing:.12em;color:'+c.fog+';margin-bottom:6px">2 OF 4 SLOTS</div>'
+        + pips(2)
+      + '</div></div>';
+  }
+
+  if(hud.key==='ambient'){
+    hudHTML =
+      '<div style="height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:18px">'
+      + '<div style="'+D+';font-size:'+(typ.key==='hand'?'34px':'22px')+';color:'+c.snow+';opacity:.85;margin-bottom:6px">Day 34</div>'
+      + '<div style="'+U+';font-size:8.5px;letter-spacing:.2em;color:'+c.fog+';opacity:.75">TWO SLOTS LEFT</div>'
+      + '</div>';
+  }
+
+  document.getElementById('phone').innerHTML =
+    '<div class="notch" style="background:'+c.bg+';color:'+c.fog+';'+U+'"><span>9:41</span><span>\u25AE\u25AE\u25AE</span></div>'
+    + '<div class="scene" style="background:'+c.bg+'">'+scene+'<div class="hud">'+hudHTML+'</div></div>';
+
+  document.getElementById('pvTitle').textContent = pal.name + ' · ' + hud.name;
+  document.getElementById('pvCombo').textContent = pal.key + ' / ' + hud.key + ' / ' + typ.key;
+  document.getElementById('pvNotes').innerHTML = [pal.key,hud.key,typ.key]
+    .map(k=>'<dt>'+NOTES[k][0]+'</dt><dd>'+NOTES[k][1]+'</dd>').join('');
+}
+
+paint();
+</script>
+</body>
+</html>

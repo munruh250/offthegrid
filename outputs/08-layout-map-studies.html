@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAST OUT — Layout & Map Studies</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700;800;900&family=Archivo+Narrow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0A0D0B; --paper:#E8E3D5; --cedar:#B4622E; --fog:#8D9A7E; --slate:#6E8494;
+  --line:rgba(232,227,213,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--ink); color:var(--paper);
+  font-family:'Archivo',system-ui,sans-serif; line-height:1.5;
+  padding-bottom:120px; position:relative;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E");
+}
+.wrap{max-width:1300px;margin:0 auto;padding:0 26px}
+
+/* ---- masthead: type as the hero, bleeding ---- */
+header{padding:70px 0 0;position:relative;overflow:hidden}
+.mast{
+  font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(58px,15.5vw,190px);
+  line-height:.8;letter-spacing:-.045em;text-transform:uppercase;
+  margin-left:-.06em;color:var(--paper)
+}
+.mast span{color:transparent;-webkit-text-stroke:1.5px var(--cedar)}
+.mastrow{
+  display:flex;gap:26px;align-items:flex-end;justify-content:space-between;
+  border-bottom:1px solid var(--line);padding-bottom:22px;margin:24px 0 0;flex-wrap:wrap
+}
+.mastmeta{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;
+  color:var(--fog);max-width:46ch;line-height:1.75
+}
+.mastmeta b{color:var(--paper);font-weight:500}
+
+/* ---- season control: ruler, not slider ---- */
+.ruler{position:sticky;top:0;z-index:60;background:rgba(10,13,11,.93);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);padding:13px 0;margin-bottom:56px}
+.ruler-in{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.ruler-lbl{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.2em;color:var(--fog);text-transform:uppercase}
+input[type=range]{flex:1;min-width:180px;-webkit-appearance:none;appearance:none;height:22px;background:transparent;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:22px;background:
+  repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 12px);border-bottom:1px solid var(--line)}
+input[type=range]::-moz-range-track{height:22px;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 12px);border-bottom:1px solid var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:2px;height:22px;background:var(--cedar);box-shadow:0 0 0 4px rgba(180,98,46,.18)}
+input[type=range]::-moz-range-thumb{width:2px;height:22px;background:var(--cedar);border:0;border-radius:0}
+input[type=range]:focus-visible{outline:1px solid var(--cedar);outline-offset:3px}
+.ruler-read{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper);min-width:210px;letter-spacing:.03em}
+.ruler-read i{color:var(--fog);font-style:normal}
+
+/* ---- section headers: numbered rule, asymmetric ---- */
+section{margin-bottom:78px}
+.shead{display:grid;grid-template-columns:52px 1fr;gap:0 18px;align-items:start;margin-bottom:30px}
+.shead .n{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--cedar);letter-spacing:.1em;padding-top:11px;border-top:2px solid var(--cedar)}
+.shead .t{border-top:1px solid var(--line);padding-top:10px}
+.shead h2{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:clamp(26px,4vw,40px);
+  text-transform:uppercase;letter-spacing:-.005em;line-height:1.02;margin-bottom:9px}
+.shead p{color:var(--fog);font-size:14px;max-width:66ch}
+.shead p b{color:var(--paper);font-weight:500}
+
+/* ---- study cards: staggered, not a uniform grid ---- */
+.studies{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:52px 30px;align-items:start}
+.study:nth-child(even){padding-top:34px}
+.cap{display:grid;grid-template-columns:auto 1fr;gap:0 11px;margin-top:16px;align-items:start}
+.cap .k{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--cedar);letter-spacing:.1em;padding-top:4px}
+.cap h3{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:16.5px;text-transform:uppercase;letter-spacing:.01em;margin-bottom:5px}
+.cap p{font-size:12.5px;color:var(--fog);line-height:1.55}
+.cap p em{color:var(--cedar);font-style:normal}
+
+/* ---- device ---- */
+.dev{width:100%;aspect-ratio:300/620;position:relative;overflow:hidden;background:#0d1210;
+  border:1px solid rgba(232,227,213,.1)}
+.dev canvas{position:absolute;inset:0;width:100%;height:100%}
+.ov{position:absolute;inset:0}
+
+/* utility */
+.mono{font-family:'IBM Plex Mono',monospace}
+.nar{font-family:'Archivo Narrow',sans-serif}
+.tnum{font-variant-numeric:tabular-nums}
+
+.note{border-left:2px solid var(--cedar);padding:4px 0 4px 18px;margin:40px 0;max-width:70ch;color:var(--fog);font-size:14.5px}
+.note b{color:var(--paper);font-weight:500}
+footer{border-top:1px solid var(--line);padding-top:32px;color:#5C6659;font-size:12.5px;max-width:72ch}
+footer p{margin-bottom:12px}
+footer b{color:var(--fog);font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="mast">Ground<br><span>Truth</span></div>
+  <div class="mastrow">
+    <div class="mastmeta">
+      <b>Layout studies 01–03</b> — three ways to put state on screen without a single rounded panel.<br>
+      <b>Map treatments 04–08</b> — real terrain, drawn from noise, with the hex grid pushed back to a survey overlay.<br>
+      Palette held from the last pass. Everything responds to the day ruler.
+    </div>
+  </div>
+</header>
+
+<div class="ruler">
+  <div class="wrap" style="padding:0 26px">
+    <div class="ruler-in">
+      <label class="ruler-lbl" for="day">Day</label>
+      <input type="range" id="day" min="1" max="60" value="34">
+      <div class="ruler-read" id="read"></div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="shead"><div class="n">01–03</div><div class="t">
+    <h2>Layout, without panels</h2>
+    <p>The default habit is a floating card with a hairline border and a pill tag. All three of these refuse that. Instead they borrow from things that already exist in this world: <b>a survey sheet, a field instrument, a broadcast overlay.</b></p>
+  </div></div>
+  <div class="studies" id="layouts"></div>
+</section>
+
+<section>
+  <div class="shead"><div class="n">04–08</div><div class="t">
+    <h2>Map treatments</h2>
+    <p>Terrain is generated from fractal noise, not drawn as tiles — so contours, coastline and ridgelines are continuous and the hex grid sits <b>on top of</b> nature rather than replacing it. Each treatment pushes the grid back by a different amount.</p>
+  </div></div>
+  <div class="studies" id="maps"></div>
+</section>
+
+<div class="note">
+  <b>The grid should be an instrument, not the terrain.</b> Civilization draws the world as hexes; here the world is continuous and the hex is a survey overlay laid over it — the abstraction the player uses to reason about a place, not the place itself. That framing lets the grid fade almost to nothing during exploration and firm up during planning, without the map ever looking like a board game.
+</div>
+
+<footer>
+  <p><b>What changed structurally.</b> No rounded corners, no bordered cards, no pill tags. Type does the separating instead of boxes: extreme weight and size contrast, ragged asymmetric alignment, elements bleeding off the frame, leader lines connecting data to the thing it describes. Grain over everything.</p>
+  <p><b>On the ruler.</b> The day control is drawn as a measuring rule rather than a slider — small thing, but it's the sort of detail that decides whether an interface feels authored or assembled.</p>
+  <p><b>Still to resolve.</b> Hex size against thumb reach: at 300px wide, a 26px hex is below the 44px tap target, so selection needs either a larger grid or tap-nearest-centre with a generous radius. Worth testing on a real device before the grid size is locked.</p>
+</footer>
+
+</div>
+
+<script>
+/* ================= palette ================= */
+const CEDAR={bg:'#151812',mid:'#2C3327',fog:'#8D9A7E',snow:'#E2DFD2',warm:'#B4622E',alarm:'#9C3B28',
+             water:'#22302F',shore:'#4A5240',rock:'#5A5B52',high:'#8E8C7C'};
+const COLD ={bg:'#0D141B',mid:'#1B2833',fog:'#6E8494',snow:'#DCE5EA',warm:'#C4632A',alarm:'#B8453C',
+             water:'#16222B',shore:'#33434E',rock:'#4E5A63',high:'#9FB0BC'};
+const hx=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const mix=(a,b,t)=>{const A=hx(a),B=hx(b);return'#'+[0,1,2].map(i=>Math.round(A[i]+(B[i]-A[i])*t).toString(16).padStart(2,'0')).join('')};
+const pal=t=>Object.fromEntries(Object.keys(CEDAR).map(k=>[k,mix(CEDAR[k],COLD[k],t)]));
+
+function state(d){
+  const t=Math.min(1,Math.max(0,(d-1)/59));
+  return {t,d,
+    season:d<=20?'Salmon run':d<=35?'Run tapering':d<=50?'Lean season':'Winter',
+    slots:d<=14?5:d<=32?4:3,
+    wt:+(85-19.4*Math.pow(t,.85)).toFixed(1),
+    bf:+(20-8.4*Math.pow(t,.9)).toFixed(1),
+    morale:Math.round(78-40*Math.pow(t,1.15)),
+    temp:Math.round(12-17*t),
+    cache:d<=20?7:d<=35?5:d<=50?3:2,
+    c:pal(t)};
+}
+
+/* ================= noise terrain ================= */
+function noiseFn(seed){
+  let s=seed>>>0; const rnd=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
+  const perm=[...Array(256).keys()];
+  for(let i=255;i>0;i--){const j=Math.floor(rnd()*(i+1));[perm[i],perm[j]]=[perm[j],perm[i]];}
+  const p=new Uint8Array(512); for(let i=0;i<512;i++)p[i]=perm[i&255];
+  const h=(a,b)=>p[(p[a&255]+b)&255]/255;
+  const vn=(x,y)=>{
+    const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;
+    const u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+    return (h(xi,yi)*(1-u)+h(xi+1,yi)*u)*(1-v)+(h(xi,yi+1)*(1-u)+h(xi+1,yi+1)*u)*v;
+  };
+  return (x,y)=>{let a=.5,f=1,sum=0,nrm=0;
+    for(let i=0;i<5;i++){sum+=a*vn(x*f,y*f);nrm+=a;a*=.5;f*=2;}
+    return sum/nrm;};
+}
+const NOISE=noiseFn(20260816);
+
+/* height field with a coastline pushed to the lower-left */
+function height(x,y,W,H){
+  const n=NOISE(x/58,y/58);
+  const dx=x/W, dy=y/H;
+  const coast=Math.min(1,(dx*0.9+ (1-dy)*0.7));      // land rises to upper-right
+  return Math.max(0,Math.min(1, n*0.72 + coast*0.46 - 0.20));
+}
+
+/* colour ramp — banded, so contours emerge naturally */
+function ramp(h,c,bands){
+  const b=bands||0;
+  const q=b? Math.floor(h*b)/b + (1/(b*2)) : h;
+  if(q<0.30) return c.water;
+  if(q<0.36) return mix(c.water,c.shore,(q-0.30)/0.06);
+  if(q<0.50) return mix(c.shore,c.mid,(q-0.36)/0.14);
+  if(q<0.68) return mix(c.mid,c.rock,(q-0.50)/0.18);
+  if(q<0.84) return mix(c.rock,c.high,(q-0.68)/0.16);
+  return mix(c.high,c.snow,(q-0.84)/0.16);
+}
+
+function paintTerrain(ctx,W,H,c,opts){
+  const o=opts||{}, step=o.step||2, bands=o.bands||0;
+  const img=ctx.createImageData(W,H);
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      let h=height(x,y,W,H);
+      const col=hx(ramp(h,c,bands));
+      // relief shading from the west
+      const hl=height(x-2,y-2,W,H);
+      const sh=1+(h-hl)*(o.relief===false?0:5.5);
+      const i=(y*W+x)*4;
+      img.data[i]  =Math.max(0,Math.min(255,col[0]*sh));
+      img.data[i+1]=Math.max(0,Math.min(255,col[1]*sh));
+      img.data[i+2]=Math.max(0,Math.min(255,col[2]*sh));
+      img.data[i+3]=255;
+    }
+  }
+  ctx.putImageData(img,0,0);
+}
+
+/* ---- hex helpers (flat-top axial) ---- */
+function hexPts(cx,cy,r){
+  const p=[];for(let i=0;i<6;i++){const a=Math.PI/180*(60*i);p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}
+  return p;
+}
+function hexCells(W,H,r){
+  const cells=[],wStep=r*1.5,hStep=r*Math.sqrt(3);
+  for(let q=-1;q*wStep<W+r;q++){
+    for(let row=-1;row*hStep<H+r;row++){
+      const cx=q*wStep, cy=row*hStep+(q%2?hStep/2:0);
+      if(cx>-r&&cx<W+r&&cy>-r&&cy<H+r) cells.push({q,row,cx,cy});
+    }
+  }
+  return cells;
+}
+function tracePath(ctx,pts){ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();}
+
+/* ================= map treatments ================= */
+const MAPS={
+
+survey:(ctx,W,H,s)=>{
+  const c=s.c;
+  paintTerrain(ctx,W,H,c,{bands:11});
+  // contour hairlines at band edges
+  ctx.globalAlpha=.22;ctx.strokeStyle=c.snow;ctx.lineWidth=.5;
+  for(let y=1;y<H;y++)for(let x=1;x<W;x++){
+    const a=Math.floor(height(x,y,W,H)*11),b=Math.floor(height(x-1,y,W,H)*11);
+    if(a!==b){ctx.fillStyle=c.snow;ctx.fillRect(x,y,.7,.7);}
+  }
+  ctx.globalAlpha=1;
+  // hex survey overlay
+  ctx.strokeStyle=c.snow;ctx.globalAlpha=.16;ctx.lineWidth=.6;
+  hexCells(W,H,26).forEach(h=>{tracePath(ctx,hexPts(h.cx,h.cy,26));ctx.stroke();});
+  ctx.globalAlpha=1;
+},
+
+painted:(ctx,W,H,s)=>{
+  const c=s.c;
+  paintTerrain(ctx,W,H,c,{});
+  // grid only within reach of camp
+  const px=W*.52,py=H*.56;
+  hexCells(W,H,26).forEach(h=>{
+    const d=Math.hypot(h.cx-px,h.cy-py)/(W*.52);
+    if(d>1)return;
+    ctx.globalAlpha=.30*(1-d)*(1-d);
+    ctx.strokeStyle=c.snow;ctx.lineWidth=.7;
+    tracePath(ctx,hexPts(h.cx,h.cy,26));ctx.stroke();
+  });
+  ctx.globalAlpha=1;
+},
+
+vertex:(ctx,W,H,s)=>{
+  const c=s.c;
+  paintTerrain(ctx,W,H,c,{});
+  ctx.fillStyle=c.snow;ctx.globalAlpha=.34;
+  const seen=new Set();
+  hexCells(W,H,26).forEach(h=>hexPts(h.cx,h.cy,26).forEach(p=>{
+    const k=Math.round(p[0])+','+Math.round(p[1]);
+    if(seen.has(k))return; seen.add(k);
+    ctx.fillRect(p[0]-.75,p[1]-.75,1.5,1.5);
+  }));
+  ctx.globalAlpha=1;
+},
+
+ink:(ctx,W,H,s)=>{
+  const c=s.c;
+  // posterised to three tones
+  const img=ctx.createImageData(W,H);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const h=height(x,y,W,H);
+    const tone = h<0.32? c.bg : h<0.60? c.mid : c.fog;
+    const col=hx(tone); const i=(y*W+x)*4;
+    img.data[i]=col[0];img.data[i+1]=col[1];img.data[i+2]=col[2];img.data[i+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+  // hatching on the mid band
+  ctx.strokeStyle=c.bg;ctx.globalAlpha=.5;ctx.lineWidth=.6;
+  for(let k=-H;k<W+H;k+=5){
+    ctx.beginPath();
+    for(let t2=0;t2<H;t2+=2){
+      const x=k+t2, y=t2, h=height(x,y,W,H);
+      if(h>=0.32&&h<0.60){ctx.moveTo(x,y);ctx.lineTo(x+2,y+2);}
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  ctx.strokeStyle=c.snow;ctx.globalAlpha=.2;ctx.lineWidth=.55;
+  hexCells(W,H,26).forEach(h=>{tracePath(ctx,hexPts(h.cx,h.cy,26));ctx.stroke();});
+  ctx.globalAlpha=1;
+},
+
+cartographer:(ctx,W,H,s)=>{
+  const c=s.c;
+  // unscouted ground = blank survey paper
+  ctx.fillStyle=mix(c.bg,'#000000',.3);ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=c.fog;ctx.globalAlpha=.10;ctx.lineWidth=.6;
+  hexCells(W,H,26).forEach(h=>{tracePath(ctx,hexPts(h.cx,h.cy,26));ctx.stroke();});
+  ctx.globalAlpha=1;
+  // scouted region: terrain drawn in, clipped to hexes
+  const px=W*.5,py=H*.54, reach=W*.46;
+  const scouted=hexCells(W,H,26).filter(h=>Math.hypot(h.cx-px,h.cy-py)<reach);
+  ctx.save();
+  ctx.beginPath();
+  scouted.forEach(h=>{const p=hexPts(h.cx,h.cy,26.5);p.forEach((q,i)=>i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]));ctx.closePath();});
+  ctx.clip();
+  paintTerrain(ctx,W,H,c,{bands:9});
+  ctx.restore();
+  // drawn edge
+  ctx.strokeStyle=c.snow;ctx.globalAlpha=.3;ctx.lineWidth=.8;
+  scouted.forEach(h=>{tracePath(ctx,hexPts(h.cx,h.cy,26));ctx.stroke();});
+  ctx.globalAlpha=1;
+}
+};
+
+/* ================= layout overlays ================= */
+const LAYOUTS={
+
+/* 01 — instrument: no panels, marks on the frame edge */
+instrument:s=>{const c=s.c;
+  const arc=(pct,col)=>{const R=27,C=2*Math.PI*R;
+    return '<svg width="66" height="66" viewBox="0 0 66 66"><circle cx="33" cy="33" r="'+R+'" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="2"/>'
+    +'<circle cx="33" cy="33" r="'+R+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="butt" stroke-dasharray="'+(C*pct/100)+' '+C+'" transform="rotate(-90 33 33)"/></svg>';};
+  let ticks='';
+  for(let i=0;i<28;i++){const on=i<Math.round(28*s.morale/100);
+    ticks+='<i style="position:absolute;right:0;top:'+(6+i*3.1)+'%;width:'+(on?11:6)+'px;height:1.5px;background:'+(on?(s.morale<25?c.alarm:c.snow):'rgba(255,255,255,.18)')+'"></i>';}
+  return '<div class="ov">'
+   +'<div style="position:absolute;left:-6px;top:-14px;font-family:Archivo;font-weight:900;font-size:132px;line-height:1;color:'+c.snow+';opacity:.09;letter-spacing:-.06em">'+s.d+'</div>'
+   +ticks
+   +'<div style="position:absolute;right:16px;top:2%;transform:rotate(90deg);transform-origin:right top;font-family:IBM Plex Mono;font-size:8px;letter-spacing:.3em;color:'+c.fog+'">MORALE</div>'
+   +'<div style="position:absolute;left:12px;bottom:96px">'+arc(s.bf*4,c.warm)
+     +'<div style="margin-top:-46px;margin-left:0;text-align:center;width:66px"><div class="tnum" style="font-weight:700;font-size:17px;color:'+c.snow+'">'+s.bf+'</div>'
+     +'<div class="mono" style="font-size:7px;letter-spacing:.18em;color:'+c.fog+'">BF %</div></div></div>'
+   +'<div style="position:absolute;left:0;bottom:44px;right:0;padding:0 14px">'
+     +'<div class="nar" style="font-weight:700;font-size:21px;line-height:1.05;color:'+c.snow+';text-transform:uppercase;letter-spacing:-.01em">Check the<br>snare line</div>'
+     +'<div class="mono" style="font-size:9px;color:'+c.fog+';margin-top:7px;letter-spacing:.02em">1 SLOT &nbsp;·&nbsp; \u2212420 KCAL &nbsp;·&nbsp; <span style="color:'+c.alarm+'">EXPOSURE</span></div></div>'
+   +'<div style="position:absolute;left:14px;bottom:16px;right:14px;height:1px;background:rgba(255,255,255,.16)"></div>'
+   +'<div style="position:absolute;left:14px;bottom:16px;height:1px;background:'+c.warm+';width:'+(2/s.slots*100)+'%"></div>'
+   +'<div class="mono" style="position:absolute;left:14px;bottom:2px;font-size:8px;letter-spacing:.16em;color:'+c.fog+'">SLOT 2 / '+s.slots+'</div>'
+   +'<div class="mono" style="position:absolute;right:14px;bottom:2px;font-size:8px;letter-spacing:.16em;color:'+c.fog+'">'+s.temp+'\u00B0 TONIGHT</div>'
+   +'</div>';},
+
+/* 02 — survey sheet: gutter, leader lines, marginalia */
+survey:s=>{const c=s.c;
+  const leader=(y,lbl,val)=>
+    '<div style="position:absolute;left:0;top:'+y+'%;width:100%;display:flex;align-items:center;gap:0">'
+    +'<div style="width:42px;flex:0 0 42px;text-align:right;padding-right:5px" class="mono">'
+      +'<div style="font-size:11px;font-weight:500;color:'+c.snow+'" class="tnum">'+val+'</div></div>'
+    +'<div style="flex:1;height:1px;background:rgba(255,255,255,.18)"></div>'
+    +'<div class="mono" style="font-size:7.5px;letter-spacing:.16em;color:'+c.fog+';padding-left:5px">'+lbl+'</div></div>';
+  return '<div class="ov" style="background:linear-gradient(90deg,rgba(0,0,0,.62) 0 46%,transparent 82%)">'
+   +'<div style="position:absolute;left:0;top:0;bottom:0;width:20px;border-right:1px solid rgba(255,255,255,.14)"></div>'
+   +'<div class="mono" style="position:absolute;left:5px;top:150px;transform:rotate(-90deg);transform-origin:left top;font-size:8px;letter-spacing:.34em;color:'+c.fog+';white-space:nowrap">'+s.season.toUpperCase()+'</div>'
+   +'<div style="position:absolute;left:30px;top:14px"><div class="nar" style="font-weight:700;font-size:44px;line-height:.85;color:'+c.snow+';letter-spacing:-.02em">'+s.d+'</div>'
+     +'<div class="mono" style="font-size:8px;letter-spacing:.2em;color:'+c.fog+';margin-top:2px">DAY</div></div>'
+   +'<div style="position:absolute;left:30px;right:12px;top:96px;height:130px">'
+     +leader(0,'MORALE',s.morale)+leader(26,'KG',s.wt)+leader(52,'BODY FAT',s.bf+'%')+leader(78,'CACHE',s.cache+'d')+'</div>'
+   +'<div style="position:absolute;left:30px;right:14px;bottom:52px;border-top:1px solid rgba(255,255,255,.18);padding-top:9px">'
+     +'<div class="nar" style="font-weight:700;font-size:17px;text-transform:uppercase;color:'+c.snow+';line-height:1.05;margin-bottom:5px">Creek bend<br>hunted out</div>'
+     +'<div style="font-size:11px;color:'+c.fog+';line-height:1.45">Sign is old. Ridge north still unscouted.</div></div>'
+   +'<div class="mono" style="position:absolute;left:30px;bottom:16px;font-size:8px;letter-spacing:.16em;color:'+c.fog+'">SHEET '+String(s.d).padStart(2,'0')+' / 60 &nbsp;·&nbsp; SLOT 2 OF '+s.slots+'</div>'
+   +'</div>';},
+
+/* 03 — broadcast: angular lower third */
+broadcast:s=>{const c=s.c;
+  const cell=(v,l)=>'<div style="padding-right:13px"><div class="tnum" style="font-weight:800;font-size:16px;color:'+c.snow+';line-height:1">'+v+'</div>'
+    +'<div class="mono" style="font-size:7px;letter-spacing:.15em;color:'+c.fog+';margin-top:2px">'+l+'</div></div>';
+  return '<div class="ov">'
+   +'<div style="position:absolute;left:0;top:16px;background:'+c.warm+';padding:4px 13px 4px 11px;clip-path:polygon(0 0,100% 0,calc(100% - 9px) 100%,0 100%)">'
+     +'<span class="nar" style="font-weight:700;font-size:14px;letter-spacing:.02em;color:#12100C;text-transform:uppercase">Day '+s.d+'</span></div>'
+   +'<div class="mono" style="position:absolute;right:12px;top:20px;font-size:8.5px;letter-spacing:.16em;color:'+c.snow+'">'+s.season.toUpperCase()+'</div>'
+   +'<div style="position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.9) 34%);padding:44px 12px 12px">'
+     +'<div style="border-left:3px solid '+c.warm+';padding-left:10px;margin-bottom:13px">'
+       +'<div class="nar" style="font-weight:800;font-size:23px;line-height:1;text-transform:uppercase;color:'+c.snow+';letter-spacing:-.015em">Check the snare line</div>'
+       +'<div class="mono" style="font-size:8.5px;letter-spacing:.12em;color:'+c.fog+';margin-top:6px">1 SLOT · \u2212420 KCAL · <span style="color:'+c.alarm+'">EXPOSURE</span></div></div>'
+     +'<div style="display:flex;border-top:1px solid rgba(255,255,255,.18);padding-top:10px">'
+       +cell(s.morale,'MORALE')+cell(s.wt,'KG')+cell(s.bf+'%','BF')+cell(s.cache+'d','CACHE')+cell(s.temp+'\u00B0','NIGHT')+'</div>'
+   +'</div></div>';}
+};
+
+/* ================= render ================= */
+const LAYOUT_DEFS=[
+  ['instrument','painted','01','Edge instrument','No panels at all. Vitals become tick marks on the frame and an arc gauge; the day numeral sits <em>behind</em> everything at 9% opacity. Maximum world, and the least screen furniture of the three.'],
+  ['survey','survey','02','Survey sheet','Asymmetric gutter with rotated season label, and <em>leader lines</em> running from each value out to its label. Borrowed from topographic sheets and engineering drawings.'],
+  ['broadcast','ink','03','Broadcast lower-third','Angular clipped tab, hard left rule, dense stat strip. Loud and immediate \u2014 the most legible at a glance, the least atmospheric.']
+];
+const MAP_DEFS=[
+  ['survey','04','Survey overlay','Terrain banded into eleven elevation steps so <em>contour lines emerge on their own</em>, with a continuous hex grid at 16% over the top. Reads as a real survey sheet.'],
+  ['painted','05','Grid on reach','Full painterly terrain; the grid only exists within walking distance of camp and fades with the square of distance. <em>Nature dominant, hex as a tool you carry.</em>'],
+  ['vertex','06','Vertices only','No hex outlines whatsoever \u2014 just a dot at each vertex. The grid is implied and the eye completes it. The most natural, and the hardest to plan a route on.'],
+  ['ink','07','Woodcut','Posterised to three tones with directional hatching on the mid band. Stylised rather than simulated; ages well and reads hard at small size.'],
+  ['cartographer','08','Cartographer','Unscouted ground is <em>blank paper with ghost hexes</em>; terrain is only drawn where you have been. Fog of war as an unfinished map \u2014 and the strongest fit for cross-run map knowledge.']
+];
+
+function device(inner){return '<div class="dev"><canvas></canvas>'+inner+'</div>';}
+
+function build(){
+  document.getElementById('layouts').innerHTML=LAYOUT_DEFS.map(([lk,mk,n,t,d])=>
+    '<div class="study" data-layout="'+lk+'" data-map="'+mk+'">'+device('')+
+    '<div class="cap"><div class="k">'+n+'</div><div><h3>'+t+'</h3><p>'+d+'</p></div></div></div>').join('');
+  document.getElementById('maps').innerHTML=MAP_DEFS.map(([mk,n,t,d])=>
+    '<div class="study" data-map="'+mk+'">'+device('')+
+    '<div class="cap"><div class="k">'+n+'</div><div><h3>'+t+'</h3><p>'+d+'</p></div></div></div>').join('');
+}
+
+function render(){
+  const s=state(+document.getElementById('day').value);
+  document.getElementById('read').innerHTML='DAY '+String(s.d).padStart(2,'0')+' <i>· '+s.season.toUpperCase()+' · '+s.slots+' SLOTS · '+s.temp+'\u00B0</i>';
+  document.querySelectorAll('.study').forEach(el=>{
+    const dev=el.querySelector('.dev'), cv=el.querySelector('canvas');
+    const W=Math.round(dev.clientWidth||300), H=Math.round(dev.clientHeight||620);
+    if(!W||!H)return;
+    cv.width=W;cv.height=H;
+    const ctx=cv.getContext('2d');
+    (MAPS[el.dataset.map]||MAPS.painted)(ctx,W,H,s);
+    const lk=el.dataset.layout;
+    const old=dev.querySelector('.ov'); if(old)old.remove();
+    if(lk) dev.insertAdjacentHTML('beforeend',LAYOUTS[lk](s));
+  });
+}
+build();
+document.getElementById('day').addEventListener('input',render);
+window.addEventListener('resize',()=>{clearTimeout(window._r);window._r=setTimeout(render,140);});
+window.addEventListener('load',render);
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+# C# / dotnet
+bin/
+obj/
+*.csproj.user
+*.sln.user
+.vs/
+.vscode/
+*.swp
+*.swo
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+*.csproj
+*.sln
+!LastOut.sln
+ProjectSettings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+*.idea
+.idea/
+*.sublime-*
+
+# Local env
+.env
+.env.local
+*.local.json
+
+# Build artifacts
+/Builds/
+*.app
+*.ipa
+*.aab

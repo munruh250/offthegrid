@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAST OUT — Merged Map System</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700;800;900&family=Archivo+Narrow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0D0B;--paper:#E8E3D5;--cedar:#B4622E;--fog:#8D9A7E;--line:rgba(232,227,213,.14)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--paper);font-family:'Archivo',system-ui,sans-serif;line-height:1.5;padding-bottom:110px;position:relative}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E")}
+.wrap{max-width:1100px;margin:0 auto;padding:0 26px}
+
+header{padding:64px 0 0}
+.mast{font-weight:900;font-size:clamp(42px,10vw,110px);line-height:.84;letter-spacing:-.04em;text-transform:uppercase;margin-left:-.04em}
+.mast span{color:transparent;-webkit-text-stroke:1.4px var(--cedar)}
+.mastrow{border-bottom:1px solid var(--line);padding-bottom:22px;margin:22px 0 0}
+.mastmeta{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.05em;color:var(--fog);max-width:70ch;line-height:1.85}
+.mastmeta b{color:var(--paper);font-weight:500}
+
+.ruler{position:sticky;top:0;z-index:60;background:rgba(10,13,11,.93);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:13px 0;margin-bottom:44px}
+.ruler-in{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.ruler-lbl{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.2em;color:var(--fog);text-transform:uppercase}
+input[type=range]{flex:1;min-width:160px;-webkit-appearance:none;appearance:none;height:22px;background:transparent;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:22px;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 12px);border-bottom:1px solid var(--line)}
+input[type=range]::-moz-range-track{height:22px;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 12px);border-bottom:1px solid var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:2px;height:22px;background:var(--cedar);box-shadow:0 0 0 4px rgba(180,98,46,.18)}
+input[type=range]::-moz-range-thumb{width:2px;height:22px;background:var(--cedar);border:0;border-radius:0}
+.ruler-read{font-family:'IBM Plex Mono',monospace;font-size:11px;min-width:220px}
+.ruler-read i{color:var(--fog);font-style:normal}
+
+section{margin-bottom:64px}
+.shead{display:grid;grid-template-columns:52px 1fr;gap:0 18px;margin-bottom:26px}
+.shead .n{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--cedar);letter-spacing:.1em;padding-top:11px;border-top:2px solid var(--cedar)}
+.shead .t{border-top:1px solid var(--line);padding-top:10px}
+.shead h2{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:clamp(22px,3.2vw,32px);text-transform:uppercase;line-height:1.05;margin-bottom:8px}
+.shead p{color:var(--fog);font-size:13.5px;max-width:68ch}
+.shead p em{color:var(--cedar);font-style:normal}
+
+.hero-layout{display:grid;grid-template-columns:360px 1fr;gap:36px;align-items:start}
+@media(max-width:760px){.hero-layout{grid-template-columns:1fr}}
+.hero-dev{width:100%;max-width:360px;aspect-ratio:320/660;position:relative;overflow:hidden;background:#0d1210;border:1px solid rgba(232,227,213,.12);margin:0 auto;cursor:crosshair}
+.hero-dev canvas{position:absolute;inset:0;width:100%;height:100%}
+.hero-dev .ov{position:absolute;inset:0}
+.hint{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;color:var(--fog);text-align:center;margin-top:12px;max-width:360px}
+.hint b{color:var(--cedar);font-weight:500}
+
+.sidebox h3{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:19px;text-transform:uppercase;margin-bottom:10px}
+.layer{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.layer .lnum{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--cedar);letter-spacing:.1em;padding-top:2px;flex:0 0 20px}
+.layer h4{font-size:13.5px;font-weight:600;margin-bottom:3px}
+.layer p{font-size:12.5px;color:var(--fog);line-height:1.5}
+.layer p em{color:var(--cedar);font-style:normal}
+
+.studies{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px}
+.dev{width:100%;aspect-ratio:300/620;position:relative;overflow:hidden;background:#0d1210;border:1px solid rgba(232,227,213,.1)}
+.dev canvas{position:absolute;inset:0;width:100%;height:100%}
+.dev .ov{position:absolute;inset:0}
+.cap{margin-top:13px}
+.cap .k{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--cedar);letter-spacing:.1em}
+.cap h3{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:15.5px;text-transform:uppercase;margin:5px 0 5px}
+.cap p{font-size:12.5px;color:var(--fog);line-height:1.5}
+
+.mono{font-family:'IBM Plex Mono',monospace}
+.nar{font-family:'Archivo Narrow',sans-serif}
+.tnum{font-variant-numeric:tabular-nums}
+
+.note{border-left:2px solid var(--cedar);padding:4px 0 4px 18px;margin:40px 0;max-width:70ch;color:var(--fog);font-size:14px}
+.note b{color:var(--paper);font-weight:500}
+footer{border-top:1px solid var(--line);padding-top:30px;color:#5C6659;font-size:12.5px;max-width:72ch}
+footer p{margin-bottom:11px}
+footer b{color:var(--fog);font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="mast">One<br><span>System</span></div>
+  <div class="mastrow">
+    <div class="mastmeta"><b>Territories as the base. Contour as a reward for elevation. The path as something you plan, not something that's always there.</b> Three separate studies, merged into one map with three layers. Tap any territory below to plot a route.</div>
+  </div>
+</header>
+
+<div class="ruler">
+  <div class="wrap" style="padding:0 26px">
+    <div class="ruler-in">
+      <label class="ruler-lbl" for="day">Day</label>
+      <input type="range" id="day" min="1" max="60" value="34">
+      <div class="ruler-read" id="read"></div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="shead"><div class="n">01</div><div class="t">
+    <h2>The merged map</h2>
+    <p>Tap a territory to route to it. Tap camp to clear the route. Fogged territories return an <em>unconfirmed</em> route — you don't get exact timing for ground you haven't walked.</p>
+  </div></div>
+  <div class="hero-layout">
+    <div>
+      <div class="hero-dev" id="heroDev"><canvas id="heroCanvas"></canvas></div>
+      <div class="hint">Tap a <b>territory</b> to route there · tap <b>camp</b> to clear</div>
+    </div>
+    <div class="sidebox">
+      <h3>Three layers, one map</h3>
+      <div class="layer"><div class="lnum">01</div><div><h4>Territory</h4><p>Natural-shaped parcels around named places. Always visible, this is the map's resting state — what you'd glance at mid-camp-chore.</p></div></div>
+      <div class="layer"><div class="lnum">02</div><div><h4>Contour <em>(elevation-gated)</em></h4><p>Isolines only render above a height threshold and fade in with elevation. Lowland territories stay clean and legible; ridgelines and saddles earn topographic detail, because that's where it actually matters for planning a route.</p></div></div>
+      <div class="layer"><div class="lnum">03</div><div><h4>Route <em>(on demand)</em></h4><p>Not a permanent network — a line that appears when you've chosen a destination, in the same style as the node-network study. Distance, time and rough slot cost render at the midpoint.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><div class="n">02</div><div class="t">
+    <h2>How hard the gate should be</h2>
+    <p>Same elevation-gated contour idea, two different curves. This is the actual decision left to make once the concept is agreed.</p>
+  </div></div>
+  <div class="studies" id="compare"></div>
+</section>
+
+<div class="note">
+  <b>Why the route disappears until asked for.</b> A always-on path network implies the game already knows the best way there — which undercuts the show's own texture of genuinely not knowing what's over the ridge. Making the line appear only on request keeps the territory layer as the default read, and turns "where's the fastest way to the ridge" into a small, real decision rather than furniture.
+</div>
+
+<footer>
+  <p><b>Numbers on the route line are illustrative</b> — placeholder scaling from pixel distance, not the real travel-cost formula. Once relocation and travel costs are settled in the balance doc, this is where that formula surfaces to the player.</p>
+  <p><b>Tap targets.</b> Small territories are still below the 44px comfortable minimum at this frame size. Hit-testing here uses nearest-centre with no minimum radius, which is generous for a mockup but would need a real minimum touch radius in production — same caution as the hex and node studies.</p>
+</footer>
+
+</div>
+
+<script>
+/* ================= palette & terrain (same island as prior studies) ================= */
+const CEDAR={bg:'#151812',mid:'#2C3327',fog:'#8D9A7E',snow:'#E2DFD2',warm:'#B4622E',alarm:'#9C3B28',
+             water:'#22302F',shore:'#4A5240',rock:'#5A5B52',high:'#8E8C7C',veg:'#38452E'};
+const COLD ={bg:'#0D141B',mid:'#1B2833',fog:'#6E8494',snow:'#DCE5EA',warm:'#C4632A',alarm:'#B8453C',
+             water:'#16222B',shore:'#33434E',rock:'#4E5A63',high:'#9FB0BC',veg:'#243026'};
+const hx=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const mix=(a,b,t)=>{const A=hx(a),B=hx(b);return'#'+[0,1,2].map(i=>Math.round(A[i]+(B[i]-A[i])*t).toString(16).padStart(2,'0')).join('')};
+const pal=t=>Object.fromEntries(Object.keys(CEDAR).map(k=>[k,mix(CEDAR[k],COLD[k],t)]));
+
+function state(d){
+  const t=Math.min(1,Math.max(0,(d-1)/59));
+  return {t,d,
+    season:d<=20?'Salmon run':d<=35?'Run tapering':d<=50?'Lean season':'Winter',
+    slots:d<=14?5:d<=32?4:3,
+    wt:+(85-19.4*Math.pow(t,.85)).toFixed(1),
+    bf:+(20-8.4*Math.pow(t,.9)).toFixed(1),
+    morale:Math.round(78-40*Math.pow(t,1.15)),
+    temp:Math.round(12-17*t),
+    cache:d<=20?7:d<=35?5:d<=50?3:2,
+    c:pal(t)};
+}
+
+function noiseFn(seed){
+  let s=seed>>>0; const rnd=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
+  const perm=[...Array(256).keys()];
+  for(let i=255;i>0;i--){const j=Math.floor(rnd()*(i+1));[perm[i],perm[j]]=[perm[j],perm[i]];}
+  const p=new Uint8Array(512); for(let i=0;i<512;i++)p[i]=perm[i&255];
+  const h=(a,b)=>p[(p[a&255]+b)&255]/255;
+  const vn=(x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;
+    const u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+    return (h(xi,yi)*(1-u)+h(xi+1,yi)*u)*(1-v)+(h(xi,yi+1)*(1-u)+h(xi+1,yi+1)*u)*v;};
+  return (x,y)=>{let a=.5,f=1,sum=0,nrm=0;
+    for(let i=0;i<5;i++){sum+=a*vn(x*f,y*f);nrm+=a;a*=.5;f*=2;}
+    return sum/nrm;};
+}
+const NOISE=noiseFn(20260816);
+function height(x,y,W,H){
+  const n=NOISE(x/58,y/58);
+  const dx=x/W, dy=y/H;
+  const coast=Math.min(1,(dx*0.9+(1-dy)*0.7));
+  return Math.max(0,Math.min(1, n*0.72 + coast*0.46 - 0.20));
+}
+function ramp(h,c){
+  if(h<0.30) return c.water;
+  if(h<0.36) return mix(c.water,c.shore,(h-0.30)/0.06);
+  if(h<0.50) return mix(c.shore,c.mid,(h-0.36)/0.14);
+  if(h<0.68) return mix(c.mid,c.rock,(h-0.50)/0.18);
+  if(h<0.84) return mix(c.rock,c.high,(h-0.68)/0.16);
+  return mix(c.high,c.snow,(h-0.84)/0.16);
+}
+function computeHeightMap(W,H){
+  const HM=new Float32Array(W*H);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++) HM[y*W+x]=height(x,y,W,H);
+  return HM;
+}
+function paintTerrainLow(ctx,W,H,c,scale){
+  const w=Math.max(1,Math.round(W*scale)), h=Math.max(1,Math.round(H*scale));
+  const off=document.createElement('canvas'); off.width=w; off.height=h;
+  const octx=off.getContext('2d');
+  const img=octx.createImageData(w,h);
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const xF=x/w*W, yF=y/h*H, hgt=height(xF,yF,W,H);
+      const col=hx(ramp(hgt,c));
+      const hl=height(xF-2,yF-2,W,H);
+      const sh=1+(hgt-hl)*5.5;
+      const i=(y*w+x)*4;
+      img.data[i]=Math.max(0,Math.min(255,col[0]*sh));
+      img.data[i+1]=Math.max(0,Math.min(255,col[1]*sh));
+      img.data[i+2]=Math.max(0,Math.min(255,col[2]*sh));
+      img.data[i+3]=255;
+    }
+  }
+  octx.putImageData(img,0,0);
+  ctx.drawImage(off,0,0,w,h,0,0,W,H);
+}
+
+/* ================= territories ================= */
+const TERRITORIES=[
+ {fx:.5,fy:.62,name:'CAMP'},{fx:.28,fy:.30,name:'NORTH RIDGE'},{fx:.68,fy:.22,name:'HIGH SADDLE'},
+ {fx:.16,fy:.55,name:'OLD GROWTH'},{fx:.82,fy:.48,name:'WINDFALL'},{fx:.35,fy:.78,name:'CREEK BEND'},
+ {fx:.66,fy:.80,name:'TIDE FLATS'},{fx:.10,fy:.85,name:'SALT MARSH'},{fx:.90,fy:.85,name:'THE BURN'},
+ {fx:.48,fy:.15,name:'BEAR WALLOW'}
+];
+function nearestIdx(x,y,seeds){let bi=0,bd=Infinity;for(let i=0;i<seeds.length;i++){const dx=x-seeds[i].x,dy=y-seeds[i].y,d=dx*dx+dy*dy;if(d<bd){bd=d;bi=i;}}return bi;}
+
+function drawBoundaries(ctx,W,H,c,seeds){
+  ctx.fillStyle=c.snow; ctx.globalAlpha=.26;
+  const step=2;
+  for(let y=0;y<H;y+=step){let prev=nearestIdx(0,y,seeds);
+    for(let x=step;x<W;x+=step){const cur=nearestIdx(x,y,seeds); if(cur!==prev)ctx.fillRect(x,y,1.3,1.3); prev=cur;}}
+  for(let x=0;x<W;x+=step){let prev=nearestIdx(x,0,seeds);
+    for(let y=step;y<H;y+=step){const cur=nearestIdx(x,y,seeds); if(cur!==prev)ctx.fillRect(x,y,1.3,1.3); prev=cur;}}
+  ctx.globalAlpha=1;
+}
+function drawLabels(ctx,W,H,c,seeds,reveal){
+  const camp=seeds[0];
+  seeds.forEach((sd,i)=>{
+    const known=i===0||Math.hypot(sd.x-camp.x,sd.y-camp.y)<reveal;
+    ctx.beginPath();ctx.arc(sd.x,sd.y,i===0?4.5:3,0,7);
+    ctx.fillStyle=i===0?c.warm:(known?c.snow:c.fog); ctx.globalAlpha=i===0?1:.85; ctx.fill(); ctx.globalAlpha=1;
+    ctx.font="600 8.5px 'IBM Plex Mono',monospace"; ctx.textAlign=sd.x>W*.72?'right':'left';
+    ctx.fillStyle=known?c.snow:c.fog; ctx.globalAlpha=known?.9:.45;
+    ctx.fillText(known?sd.name:'? ? ?', sd.x+(sd.x>W*.72?-7:7), sd.y+3);
+    ctx.globalAlpha=1;
+  });
+}
+function drawContours(ctx,W,H,c,HM,gateFn){
+  ctx.fillStyle=c.warm;
+  const levels=16;
+  for(let y=1;y<H;y++){
+    for(let x=1;x<W;x++){
+      const hcur=HM[y*W+x], hl=HM[y*W+x-1], hu=HM[(y-1)*W+x];
+      const a=Math.floor(hcur*levels), b=Math.floor(hl*levels), d=Math.floor(hu*levels);
+      if(a!==b||a!==d){
+        const ga=gateFn(hcur);
+        if(ga>0.02){ctx.globalAlpha=ga*0.6; ctx.fillRect(x,y,0.9,0.9);}
+      }
+    }
+  }
+  ctx.globalAlpha=1;
+}
+function drawRoute(ctx,camp,dest,W,H,c,confirmed){
+  const mx=(camp.x+dest.x)/2 + ((dest.name.length*31)%27-13);
+  const my=(camp.y+dest.y)/2 + ((camp.x*13)%23-11);
+  ctx.beginPath(); ctx.moveTo(camp.x,camp.y); ctx.quadraticCurveTo(mx,my,dest.x,dest.y);
+  ctx.strokeStyle=c.warm; ctx.lineWidth=confirmed?2:1.6; ctx.globalAlpha=confirmed?.85:.5;
+  ctx.setLineDash(confirmed?[]:[4,5]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1;
+  const qb=t=>{const x=(1-t)*(1-t)*camp.x+2*(1-t)*t*mx+t*t*dest.x, y=(1-t)*(1-t)*camp.y+2*(1-t)*t*my+t*t*dest.y; return [x,y];};
+  [.28,.5,.72].forEach(t=>{const [x,y]=qb(t); ctx.beginPath();ctx.arc(x,y,confirmed?2:1.6,0,7);ctx.fillStyle=c.snow;ctx.globalAlpha=confirmed?.8:.4;ctx.fill();ctx.globalAlpha=1;});
+  const [lx,ly]=qb(.5);
+  const distPx=Math.hypot(dest.x-camp.x,dest.y-camp.y), maxDist=Math.hypot(W,H);
+  const mins=Math.max(15,Math.round(distPx/maxDist*150)), slots=Math.max(1,Math.round(mins/50));
+  const label=confirmed?(mins+' MIN · '+slots+' SLOT'+(slots>1?'S':'')):'UNCONFIRMED ROUTE';
+  ctx.font="600 8px 'IBM Plex Mono',monospace"; ctx.textAlign='center';
+  const tw=ctx.measureText(label).width;
+  ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(lx-tw/2-4, ly-11, tw+8, 13);
+  ctx.fillStyle=confirmed?c.snow:c.fog; ctx.globalAlpha=1; ctx.fillText(label, lx, ly-1);
+}
+
+/* ================= gate curves ================= */
+const hardGate = h => h>0.58 ? 0.9 : 0;
+const gradualGate = h => Math.max(0, Math.min(1, (h-0.42)/0.43));
+
+/* ================= shared HUD ================= */
+function broadcastOverlay(s){
+  const c=s.c;
+  const cell=(v,l)=>'<div style="padding-right:13px"><div class="tnum" style="font-weight:800;font-size:16px;color:'+c.snow+';line-height:1">'+v+'</div>'
+    +'<div class="mono" style="font-size:7px;letter-spacing:.15em;color:'+c.fog+';margin-top:2px">'+l+'</div></div>';
+  return '<div class="ov">'
+   +'<div style="position:absolute;left:0;top:16px;background:'+c.warm+';padding:4px 13px 4px 11px;clip-path:polygon(0 0,100% 0,calc(100% - 9px) 100%,0 100%)">'
+     +'<span class="nar" style="font-weight:700;font-size:14px;letter-spacing:.02em;color:#12100C;text-transform:uppercase">Day '+s.d+'</span></div>'
+   +'<div class="mono" style="position:absolute;right:12px;top:20px;font-size:8.5px;letter-spacing:.16em;color:'+c.snow+'">'+s.season.toUpperCase()+'</div>'
+   +'<div style="position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.85) 40%);padding:36px 12px 10px">'
+     +'<div style="display:flex;border-top:1px solid rgba(255,255,255,.18);padding-top:9px">'
+       +cell(s.morale,'MORALE')+cell(s.wt,'KG')+cell(s.bf+'%','BF')+cell(s.cache+'d','CACHE')+cell(s.temp+'\u00B0','NIGHT')+'</div>'
+   +'</div></div>';
+}
+
+/* ================= hero (interactive) ================= */
+let selectedDestIndex = 1;
+const heroDev = document.getElementById('heroDev');
+const heroCanvas = document.getElementById('heroCanvas');
+
+function renderHero(){
+  const s = state(+document.getElementById('day').value);
+  const c = s.c;
+  const W = Math.round(heroDev.clientWidth||320), H = Math.round(heroDev.clientHeight||660);
+  if(!W||!H) return;
+  heroCanvas.width=W; heroCanvas.height=H;
+  const ctx = heroCanvas.getContext('2d');
+  paintTerrainLow(ctx,W,H,c,.42);
+  const seeds = TERRITORIES.map(t=>({x:t.fx*W,y:t.fy*H,name:t.name}));
+  drawBoundaries(ctx,W,H,c,seeds);
+  const HM = computeHeightMap(W,H);
+  drawContours(ctx,W,H,c,HM,gradualGate);
+  const reveal = 90 + s.t*260;
+  drawLabels(ctx,W,H,c,seeds,reveal);
+  if(selectedDestIndex>0){
+    const camp=seeds[0], dest=seeds[selectedDestIndex];
+    const known = Math.hypot(dest.x-camp.x,dest.y-camp.y) < reveal;
+    drawRoute(ctx,camp,dest,W,H,c,known);
+  }
+  const old = heroDev.querySelector('.ov'); if(old) old.remove();
+  heroDev.insertAdjacentHTML('beforeend', broadcastOverlay(s));
+  document.getElementById('read').innerHTML = 'DAY '+String(s.d).padStart(2,'0')+' <i>· '+s.season.toUpperCase()+' · '+s.slots+' SLOTS · '+s.temp+'\u00B0</i>';
+}
+
+heroCanvas.addEventListener('click', e=>{
+  const rect = heroCanvas.getBoundingClientRect();
+  const scaleX = heroCanvas.width/rect.width, scaleY = heroCanvas.height/rect.height;
+  const x = (e.clientX-rect.left)*scaleX, y = (e.clientY-rect.top)*scaleY;
+  const seeds = TERRITORIES.map(t=>({x:t.fx*heroCanvas.width,y:t.fy*heroCanvas.height,name:t.name}));
+  const idx = nearestIdx(x,y,seeds);
+  selectedDestIndex = idx===0 ? -1 : idx;
+  renderHero();
+});
+
+/* ================= comparison studies (static) ================= */
+const COMPARE_DAY = 42;
+const COMPARE_DEFS = [
+  [hardGate,'A','Hard gate','Contour switches on abruptly above 0.58 elevation. <em>Reads as "you\u2019ve crossed into high country"</em> \u2014 a clear signal, at the cost of a visible seam where it starts.'],
+  [gradualGate,'B','Gradual fade','Same idea, ramped smoothly from 0.42 to 0.85. More painterly, contour detail builds gradually rather than switching on \u2014 the version used in the hero map above.']
+];
+function renderCompare(){
+  const s = state(COMPARE_DAY), c = s.c;
+  document.getElementById('compare').innerHTML = COMPARE_DEFS.map(([,n,t,d])=>
+    '<div class="study" data-n="'+n+'"><div class="dev"><canvas></canvas></div>'
+    +'<div class="cap"><span class="k">'+n+'</span><h3>'+t+'</h3><p>'+d+'</p></div></div>').join('');
+  document.querySelectorAll('#compare .study').forEach((el,i)=>{
+    const [gateFn] = COMPARE_DEFS[i];
+    const dev = el.querySelector('.dev'), cv = el.querySelector('canvas');
+    const W = Math.round(dev.clientWidth||300), H = Math.round(dev.clientHeight||620);
+    if(!W||!H) return;
+    cv.width=W; cv.height=H;
+    const ctx = cv.getContext('2d');
+    paintTerrainLow(ctx,W,H,c,.42);
+    const seeds = TERRITORIES.map(t=>({x:t.fx*W,y:t.fy*H,name:t.name}));
+    drawBoundaries(ctx,W,H,c,seeds);
+    const HM = computeHeightMap(W,H);
+    drawContours(ctx,W,H,c,HM,gateFn);
+    const reveal = 90 + s.t*260;
+    drawLabels(ctx,W,H,c,seeds,reveal);
+    const camp=seeds[0], dest=seeds[1];
+    drawRoute(ctx,camp,dest,W,H,c, Math.hypot(dest.x-camp.x,dest.y-camp.y) < reveal);
+    dev.insertAdjacentHTML('beforeend', broadcastOverlay(s));
+  });
+}
+
+function renderAll(){ renderHero(); renderCompare(); }
+document.getElementById('day').addEventListener('input',()=>{clearTimeout(window._d);window._d=setTimeout(renderAll,40);});
+window.addEventListener('resize',()=>{clearTimeout(window._r);window._r=setTimeout(renderAll,140);});
+window.addEventListener('load',renderAll);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(renderAll);
+renderAll();
+</script>
+</body>
+</html>
