@@ -173,16 +173,94 @@ Without the signals this system is strictly worse than what exists now, because 
 
 ---
 
-## 7. Open questions for the designer
+## 7. Designer rulings
 
-| # | Question |
-|---|---|
-| C1 | Should crises be survivable-but-costly by default, with death only on compounding bad luck, or lethal on a single bad roll? The show has both and they feel very different. |
-| C2 | Should gear wear be visible as a number, or only as descriptive text? A number is legible; text preserves the field-craft feel. |
-| C3 | Should a bad-forage gamble be *possible to win*? A poisoning that is always punished teaches "never gamble," which removes the decision. |
-| C4 | Do crises stack? Two at once is dramatic and is how real runs unravel, but it multiplies the unfairness risk. |
-| C5 | Should high skill remove a crisis type entirely, or only blunt it? Removal makes builds feel powerful; blunting keeps tension everywhere. |
+### C1 — Lethality: **mostly survivable, with a small telegraphed lethal set**
+
+Crises hurt; chains kill. A cache raid puts you behind, a storm soaks you, and the
+fourth thing in the sequence is what ends the run — with the player able to name
+all four places they could have stopped it.
+
+A short list of genuinely lethal events is retained so the woods never feel safe:
+a bad fall, a serious infection. **Every one of them must be the crisis you saw
+coming** — you were told you were getting clumsy and you kept chopping. A lethal
+event with no preceding signal does not ship.
+
+This fits the thesis: difficulty comes from the body slowly failing, not from
+sudden events, and a run is only 45–75 minutes — a dice-roll death at minute
+forty is unrecoverable in a way it would not be in a long-session game.
+
+### C2 — Readouts: **both number and text, on dedicated screens** ✅ DECIDED
+
+The game gets inspectable state screens rather than relying on toasts:
+
+- **Shelter** — current tier with a plain-language stage, e.g. *"day 3: basic
+  coverage" → "roofed" → "winter-proofed"*, plus the clo number
+- **Gear** — every item's condition, and **what it contributes**: warmth, morale,
+  what it unlocks
+- **Exploration map** — territory quality and known ground
+- Each minigame keeps its own scene
+
+Crafted items show their own contribution, so a beaver-fur headpiece reads as
+*"+3 warm"* rather than silently adjusting a hidden total.
+
+**This is a bigger decision than it looks.** It means every input to the
+simulation is inspectable if the player goes and looks, which is the strongest
+possible answer to the consent rule (§10.1) and to the ≥70% cause-of-death gate
+(§5.6.3). It also gives crisis signals a permanent home rather than a transient
+one — gear condition lives on the gear screen, not in a toast the player
+dismissed three days ago.
+
+### C3 — Bad forage is **winnable** ✅ DECIDED
+
+A gamble that always punishes teaches "never gamble" and deletes the decision.
+
+Plants and fungi are **inspired by real species**, and the knowledge text is the
+mechanic: what the player is shown about a specimen is the interface, and
+**Foraging skill sharpens the hints** rather than simply lowering a hidden risk
+number.
+
+- **Low Foraging:** *"A pale mushroom with a ring on the stem. You are not sure."*
+- **High Foraging:** *"Ring on the stem, white gills, growing from wood — this is
+  the group that includes the dangerous ones. You would want to be certain."*
+
+Same specimen, same underlying risk; the skilled forager is being told what to
+look at. That is knowledge as power, not a stat check, and it is the same
+principle as the cross-run persistence thesis (§12.2).
+
+### C4 — Crises **stack**, and not all of them are your fault ✅ DECIDED
+
+Stacking is allowed — it is how real runs unravel, and it is what makes C1's
+chain-of-failures model work at all.
+
+**Important nuance from the ruling:** not every crisis should be consequence-
+driven. Some proportion must be **indifferent nature** — weather that was always
+coming, a bear moving through regardless of how well you cached. A world where
+every bad thing traces to a player mistake reads as mechanical and slightly
+punitive, and it is also untrue to the format.
+
+Proposed split, to be confirmed by playtest:
+
+| Source | Share | Feel |
+|---|---|---|
+| **Consequence** — traceable to a decision | ~70% | "I did that" |
+| **Indifferent nature** — would have happened anyway | ~30% | "That's the woods" |
+
+The consequence-driven majority is what keeps the player feeling responsible.
+The nature minority is what stops the world feeling like a machine that only
+ever punishes error. **Both need signals** — an act of nature still gets its
+weather forecast; it simply cannot be prevented, only prepared for.
+
+> `[Playtest gate]` This ratio is a feel question, not a maths question. Watch
+> specifically for players attributing an act-of-nature event to their own
+> mistake, or vice versa — either misattribution means the signalling is wrong.
+
+### C5 — High skill **blunts, never removes** ✅ DECIDED
+
+No attribute level takes a crisis type off the table. Tension stays everywhere,
+and a high-Bushcraft player still has gear fail occasionally — just later, less
+often, and more cheaply repaired.
 
 ---
 
-*Status: v0.1 specification, not yet implemented. Sequenced after doc 15's items 2 and 3, since crisis tuning against a 44-day mean run would be fitting curves to a game most players never finish.*
+*Status: v0.2, rulings folded in on C1–C5. Not yet implemented. Sequenced after doc 15's items 2 and 3, since crisis tuning against a 44-day mean run would be fitting curves to a game most players never finish.*
