@@ -85,10 +85,24 @@ public sealed class Larder
     /// <summary>Bone recovered per kg of edible mass. Bigger animals carry more.</summary>
     public const float BoneFractionOfEdible = 0.22f;
 
-    /// <summary>Add a harvest, including the bone that came with it.</summary>
+    /// <summary>
+    /// Add a harvest, including the bone that came with it.
+    ///
+    /// The preservation method's processing loss is applied HERE, on the way in.
+    /// Balance doc 4 is explicit that this - together with rack capacity and the
+    /// slots processing costs - is what caps banking, NOT aggressive rot: "the
+    /// player banks 30-50 kg and loses the remainder."
+    /// </summary>
     public void Add(float protein, float fat, float edibleKg = 0f)
     {
         boneKg += edibleKg * BoneFractionOfEdible;
+
+        float processingLoss = Method == PreservationMethod.None
+            ? 0f
+            : PreservationTable.Get(Method).LossFraction;
+        float kept = 1f - processingLoss;
+        protein *= kept;
+        fat *= kept;
         proteinG += protein;
         fatG += fat;
 
@@ -180,10 +194,7 @@ public sealed class Larder
             : PreservationTable.Get(Method).ShelfLifeDays;
 
         // Cold is a preservation method. Below freezing the cache essentially
-        // holds, which is how northern contestants actually bank a big kill and
-        // why the late season is survivable at all despite yielding almost
-        // nothing. It also creates a genuine strategic inversion: early food is
-        // abundant and perishable, late food is scarce and keeps.
+        // holds, which is how northern contestants actually bank a big kill.
         float coldBonus = nightTempCelsius switch
         {
             <= -5f => 6.0f,
@@ -192,7 +203,17 @@ public sealed class Larder
             _ => 1.0f
         };
 
-        float effectiveShelfLife = shelfLife * coldBonus;
+        // A shelf life is a SAFE WINDOW, not a half-life. Properly dried or
+        // smoked food keeps for months; it does not lose a thirtieth of itself
+        // every day. Treating the doc's figure as a decay constant destroyed 64%
+        // of a cache in 30 days, which made stockpiling pointless and is simply
+        // wrong - banking the salmon run to live on later is the central
+        // strategic move of the whole format.
+        //
+        // The cap on banking is rack CAPACITY and the SLOTS processing costs
+        // (balance doc 4), plus the processing loss taken on the way in. Not rot.
+        const float SafeWindowMultiplier = 5f;
+        float effectiveShelfLife = shelfLife * coldBonus * SafeWindowMultiplier;
         float keep = 1f - 1f / effectiveShelfLife;
         proteinG *= keep;
         fatG *= keep;

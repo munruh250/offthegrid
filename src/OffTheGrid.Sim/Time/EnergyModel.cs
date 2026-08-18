@@ -68,6 +68,30 @@ public static class EnergyModel
         return MathF.Max(0f, active - resting) * Calendar.HoursPerSlot;
     }
 
+    /// <summary>
+    /// Extra calories burned overnight when insulation falls short of what the
+    /// temperature demands.
+    ///
+    /// The sim previously had NO thermoregulation cost at all. Being cold only
+    /// set a -4 morale flag, which left three things mechanically hollow: Cold
+    /// Adaptation (its whole specced role is a thermoneutral offset), shelter clo
+    /// above the morale threshold, and the entire firewood economy. Balance doc
+    /// 6 builds a detailed fuel model whose output had nowhere to land.
+    ///
+    /// Roughly 90 kcal per clo of deficit per night, scaled by body mass - a
+    /// smaller body loses heat faster relative to its reserves. Capped, because
+    /// shivering has a ceiling (balance doc 7.2) and beyond it you get colder
+    /// rather than burning more.
+    /// </summary>
+    public static float ThermoregulationKcal(float cloDeficit, float weightKg, BalanceData balance)
+    {
+        if (cloDeficit <= 0f) return 0f;
+
+        float capped = MathF.Min(cloDeficit, 2.5f);
+        float massTerm = MathF.Pow(70f / MathF.Max(weightKg, 40f), 0.4f);
+        return capped * 90f * massTerm;
+    }
+
     /// <summary>Total metabolic cost of a slot, ignoring the BMR overlap. For display and reference.</summary>
     public static float KcalForSlot(
         Activity activity,

@@ -102,7 +102,12 @@ public static class AcuteEvents
         bool crisisToday, Rng rng, BalanceData balance)
     {
         float worn = 1f - Math.Clamp(currentMorale / balance.MoraleMax, 0f, 1f);
-        float fragility = 1f - resolve / 12f;
+        // Resolve divisor of 12 gave a 5x spread between Resolve 2 and 10, which
+        // measured at 4.12 days per point - 2.6x the next best attribute and the
+        // clear meta pick. 16 narrows it to ~2.3x: still the strongest single
+        // stat, which is faithful to the format, without making the other five
+        // decorative.
+        float fragility = 1f - resolve / 16f;
         // Three phases, matching how the format actually plays out:
         //   settling-in  - the decision still feels reversible, shock is highest
         //   the grind    - the day-20-to-45 plateau the design itself flags
@@ -130,7 +135,10 @@ public static class AcuteEvents
         // A crisis is a spike on top of the ambient daily pressure.
         float crisis = crisisToday ? 9f : 1f;
 
-        float chance = 0.085f * worn * fragility * phase * bodyPressure * crisis;
+        // Base compensates for the wider Resolve divisor above: raising the divisor
+        // narrows the spread but also shifts everyone toward fragile, so the
+        // overall exit rate has to come back down to hold the survival curve.
+        float chance = 0.062f * worn * fragility * phase * bodyPressure * crisis;
         return rng.Stream("events.tapout").NextFloat() < chance;
     }
 

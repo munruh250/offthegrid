@@ -397,6 +397,10 @@ public sealed class Run
             voluntaryTapOut = true;
         }
 
+        // Cold costs calories, not just morale.
+        float cloDeficit = CloDemandTonight(DayNumber) - AvailableClo;
+        burn += EnergyModel.ThermoregulationKcal(cloDeficit, Body.WeightKg, b);
+
         // ---- intake ----
         // Appetite is what the day cost. The larder rarely covers it, and the
         // protein ceiling then caps what of it the body can actually use.

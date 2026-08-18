@@ -75,8 +75,16 @@ public static class Harvest
         // A trap already did the work. If the line produced, you have the animal.
         Activity.TrapLine => 0.92f,
 
-        // Gathering. Finding is the whole job.
-        Activity.Foraging => 0.95f,
+        // Gathering. Recognising what is safe and worth taking is the job, and
+        // it is where Foraging skill lives. A base of 0.95 left no headroom at
+        // all - measured, the attribute was worth 0.1 days per point across its
+        // entire range even on a plan built around it.
+        Activity.Foraging => source switch
+        {
+            FoodSource.Berries => 0.55f,
+            FoodSource.SeaweedAndKelp => 0.72f,
+            _ => 0.80f
+        },
 
         // Line fishing: hooking is not landing.
         Activity.Fishing => source switch
@@ -126,8 +134,10 @@ public static class Harvest
         ],
         [(Season.SalmonRun, Activity.Foraging)] =
         [
-            new(FoodSource.Mussels, 0.55f),
-            new(FoodSource.DungenessCrab, 0.18f)
+            new(FoodSource.Berries, 0.42f),
+            new(FoodSource.Mussels, 0.34f),
+            new(FoodSource.SeaweedAndKelp, 0.14f),
+            new(FoodSource.DungenessCrab, 0.10f)
         ],
 
         // --- Tapering: coho declining, fat sources thinning. ---
@@ -152,8 +162,10 @@ public static class Harvest
         ],
         [(Season.RunTapering, Activity.Foraging)] =
         [
-            new(FoodSource.Mussels, 0.42f),
-            new(FoodSource.DungenessCrab, 0.12f)
+            new(FoodSource.Berries, 0.26f),
+            new(FoodSource.Mussels, 0.34f),
+            new(FoodSource.SeaweedAndKelp, 0.16f),
+            new(FoodSource.DungenessCrab, 0.08f)
         ],
 
         // --- Lean season: the protein trap bites hardest. ---
@@ -175,7 +187,8 @@ public static class Harvest
         ],
         [(Season.Lean, Activity.Foraging)] =
         [
-            new(FoodSource.Mussels, 0.44f)
+            new(FoodSource.Mussels, 0.36f),
+            new(FoodSource.SeaweedAndKelp, 0.22f)
         ],
 
         // --- Winter: cache or die. Bear denned, no fat source at all. ---
@@ -196,7 +209,8 @@ public static class Harvest
         ],
         [(Season.Winter, Activity.Foraging)] =
         [
-            new(FoodSource.Mussels, 0.30f)
+            new(FoodSource.Mussels, 0.24f),
+            new(FoodSource.SeaweedAndKelp, 0.18f)
         ]
     };
 

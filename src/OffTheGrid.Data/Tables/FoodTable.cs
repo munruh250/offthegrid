@@ -17,7 +17,13 @@ public enum FoodSource
     Rockfish,
     Grouse,
     Mussels,
-    DungenessCrab
+    DungenessCrab,
+
+    /// <summary>Salal, huckleberry, salmonberry. Carbohydrate, not fat - a bridge, not a solution.</summary>
+    Berries,
+
+    /// <summary>Bull kelp and sea lettuce. Minerals and bulk; almost no energy.</summary>
+    SeaweedAndKelp
 }
 
 /// <summary>
@@ -77,7 +83,16 @@ public static class FoodTable
         [FoodSource.Rockfish]       = new(FoodSource.Rockfish,         1.2f,  0.5f,     567f,    102f,     9f),
         [FoodSource.Grouse]         = new(FoodSource.Grouse,           0.6f,  0.3f,     469f,     82f,    13f),
         [FoodSource.Mussels]        = new(FoodSource.Mussels,          1.0f,  0.3f,     258f,     36f,     7f),
-        [FoodSource.DungenessCrab]  = new(FoodSource.DungenessCrab,    0.9f,  0.2f,     196f,     39f,     2f)
+        [FoodSource.DungenessCrab]  = new(FoodSource.DungenessCrab,    0.9f,  0.2f,     196f,     39f,     2f),
+        // Per kg gathered. Carbohydrate-dominant, so they sidestep the protein
+        // ceiling entirely - the only food in the table that does.
+        // Berries are the ONLY food in the table that is carbohydrate-dominant,
+        // which means they sidestep the protein ceiling completely. A forager can
+        // therefore absorb more total energy per day than a hunter sitting on a
+        // lean cache - that is the strategic point of the route, and it needs
+        // enough yield to actually matter.
+        [FoodSource.Berries]        = new(FoodSource.Berries,           1.0f,  1.6f,     920f,     11f,     5f),
+        [FoodSource.SeaweedAndKelp] = new(FoodSource.SeaweedAndKelp,    1.0f,  0.8f,     350f,     14f,     2f)
     };
 
     public static FoodEntry Get(FoodSource source) => entries[source];
