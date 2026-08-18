@@ -24,7 +24,10 @@ public enum Activity
     Sawing,
     Exploring,
     ChoppingWood,
-    HaulingLogs
+    HaulingLogs,
+
+    /// <summary>Boil bone for marrow fat. The protein-free fat path (B3).</summary>
+    RenderMarrow
 }
 
 public static class ActivityExtensions
@@ -45,6 +48,7 @@ public static class ActivityExtensions
         Activity.Exploring => 6.0f,
         Activity.ChoppingWood => 6.3f,
         Activity.HaulingLogs => 8.0f,
+        Activity.RenderMarrow => 2.2f,
         _ => throw new ArgumentOutOfRangeException(nameof(activity))
     };
 
@@ -72,6 +76,7 @@ public static class ActivityExtensions
         Activity.ShelterBuild => true,
         Activity.Sawing => true,
         Activity.ChoppingWood => true,
+        Activity.RenderMarrow => true,
         _ => false
     };
 }

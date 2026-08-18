@@ -19,6 +19,7 @@ public sealed class Larder
 {
     private float proteinG;
     private float fatG;
+    private float boneKg;
 
     /// <summary>
     /// Drying rack by default: 30-day shelf life against the cache pit's 12.
@@ -28,11 +29,32 @@ public sealed class Larder
     /// </summary>
     public PreservationMethod Method { get; set; } = PreservationMethod.DryingRack;
 
-    /// <summary>Capacity in kg of edible mass. Beyond this, a harvest is simply lost.</summary>
-    public float CapacityKg { get; set; } = 25f;
+    /// <summary>
+    /// Capacity in kg of edible mass. Beyond this a harvest is simply lost.
+    ///
+    /// This SCALES with camp investment rather than being a constant. Balance doc
+    /// 8 names preservation the top tuning lever, but a fixed cap means investment
+    /// cannot buy a strategy - it just tops off the same small tank, and every
+    /// contestant ends up playing the same grind. A cache that grows is what makes
+    /// "bank hard during the run, then coast" a real alternative shape of run,
+    /// which is how people actually survive the back half on the show.
+    /// </summary>
+    public float CapacityKg { get; set; } = BaseCapacityKg;
+
+    public const float BaseCapacityKg = 15f;
+
+    /// <summary>Capacity earned by camp tier and bushcraft skill.</summary>
+    public static float CapacityFor(int shelterTierIndex, int bushcraft) =>
+        BaseCapacityKg + 6f * shelterTierIndex + bushcraft;
 
     public float ProteinG => proteinG;
     public float FatG => fatG;
+
+    /// <summary>
+    /// Bone held from past kills, awaiting rendering. Balance doc 3.4 puts marrow
+    /// at ~180 kcal/kg of bone, almost pure fat.
+    /// </summary>
+    public float BoneKg => boneKg;
 
     /// <summary>Rough edible mass, from macro density. Used against capacity.</summary>
     public float StoredKg => (proteinG + fatG) / 1000f * 4f;
@@ -60,9 +82,13 @@ public sealed class Larder
         return proteinG / ceilingG;
     }
 
-    /// <summary>Add a harvest. Anything over capacity is lost - see the class remarks.</summary>
-    public void Add(float protein, float fat)
+    /// <summary>Bone recovered per kg of edible mass. Bigger animals carry more.</summary>
+    public const float BoneFractionOfEdible = 0.22f;
+
+    /// <summary>Add a harvest, including the bone that came with it.</summary>
+    public void Add(float protein, float fat, float edibleKg = 0f)
     {
+        boneKg += edibleKg * BoneFractionOfEdible;
         proteinG += protein;
         fatG += fat;
 
@@ -115,17 +141,59 @@ public sealed class Larder
     }
 
     /// <summary>
+    /// Render stored bone into fat. Resolves B3.
+    ///
+    /// The fat economy's real problem was never "too few fatty animals" - it is
+    /// that in EVERY animal except bear, fat arrives bonded to protein, so the
+    /// ceiling caps it before the fat is exhausted. Chinook is 52% fat by calories
+    /// and still cannot sustain a player alone.
+    ///
+    /// Marrow is the protein-free fat path. Every animal has bones, so this turns
+    /// the fat economy from an RNG gate ("did a bear spawn?") into a skill-and-
+    /// tool investment ("did I keep the bones, and spend the slots?"). It also
+    /// gives the elk's otherwise-useless lean mass a partial redemption.
+    ///
+    /// Returns kg of bone actually processed.
+    /// </summary>
+    public float RenderMarrow(float slots, BalanceData balance)
+    {
+        const float bonePerSlot = 6f;
+        const float fatGramsPerKgBone = 20f;   // ~180 kcal/kg at 9 kcal/g
+
+        float processed = Math.Min(boneKg, slots * bonePerSlot);
+        if (processed <= 0f) return 0f;
+
+        boneKg -= processed;
+        fatG += processed * fatGramsPerKgBone;
+        return processed;
+    }
+
+    /// <summary>
     /// Daily spoilage, derived from the preservation method's shelf life. A cache
     /// pit keeps 12 days, a drying rack 30 - expressed as a per-day decay so it
     /// applies smoothly rather than as a cliff.
     /// </summary>
-    public void ApplyDailySpoilage()
+    public void ApplyDailySpoilage(float nightTempCelsius = 10f)
     {
         int shelfLife = Method == PreservationMethod.None
             ? 3
             : PreservationTable.Get(Method).ShelfLifeDays;
 
-        float keep = 1f - 1f / shelfLife;
+        // Cold is a preservation method. Below freezing the cache essentially
+        // holds, which is how northern contestants actually bank a big kill and
+        // why the late season is survivable at all despite yielding almost
+        // nothing. It also creates a genuine strategic inversion: early food is
+        // abundant and perishable, late food is scarce and keeps.
+        float coldBonus = nightTempCelsius switch
+        {
+            <= -5f => 6.0f,
+            <= 0f => 4.0f,
+            <= 5f => 2.0f,
+            _ => 1.0f
+        };
+
+        float effectiveShelfLife = shelfLife * coldBonus;
+        float keep = 1f - 1f / effectiveShelfLife;
         proteinG *= keep;
         fatG *= keep;
     }

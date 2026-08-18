@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using OffTheGrid.Data;
 using OffTheGrid.Data.Balance;
 using OffTheGrid.Sim.Body;
+using OffTheGrid.Sim.Events;
 using OffTheGrid.Sim.Food;
 using OffTheGrid.Sim.Logging;
 using OffTheGrid.Sim.Morale;
@@ -37,6 +38,7 @@ public readonly record struct DayResult
     public int DayNumber { get; init; }
     public int SlotsAvailable { get; init; }
     public float BurnKcal { get; init; }
+    public AcuteEventKind Event { get; init; }
     public float HarvestedKg { get; init; }
     public float LarderDaysOfFood { get; init; }
     public bool FoodInsecure { get; init; }
@@ -114,6 +116,54 @@ public sealed class Run
     /// <summary>Slots invested toward the next tier.</summary>
     public float ShelterProgressSlots { get; private set; }
 
+    /// <summary>Comfort projects finished. Spec 5.6 puts each at +14 morale.</summary>
+    public int ComfortProjectsCompleted { get; private set; }
+
+    private float comfortProgressSlots;
+
+    /// <summary>Slots of whittling per finished comfort project.</summary>
+    private const float SlotsPerComfortProject = 3f;
+
+    /// <summary>
+    /// Spend a slot on a comfort project - a spoon, a chair, a carving.
+    ///
+    /// This is the player's only REPEATABLE morale income. Shelter milestones run
+    /// out after six tiers and large-food successes are luck; comfort projects are
+    /// the one source a player can choose to generate, which is exactly why spec
+    /// 5.6 prices them at +14 and why balance doc 7.3's competent runs depend on
+    /// them. Without this, morale is a one-way slide and even perfect play taps
+    /// out in the forties.
+    /// </summary>
+    private void AdvanceComfortProject(BalanceData b)
+    {
+        comfortProgressSlots += Harvest.SkillMultiplier(attributes[AttributeKind.Bushcraft]);
+        if (comfortProgressSlots < SlotsPerComfortProject) return;
+
+        comfortProgressSlots -= SlotsPerComfortProject;
+        ComfortProjectsCompleted++;
+        Morale.ApplyEvent(MoraleSource.ComfortProject, b.MoraleProjectCompleted, b);
+        Record.Trace.Add(new TraceEntry
+        {
+            Day = DayNumber, Slot = 0, Kind = TraceKind.MoraleEvent,
+            Code = "project.comfort", Magnitude = b.MoraleProjectCompleted
+        });
+    }
+
+    /// <summary>
+    /// How far the body is from the medical floor: 1 at full condition, 0 at the
+    /// pull threshold. Feeds the tap-out decision as well as the pull check.
+    /// </summary>
+    public float BodyConditionRatio
+    {
+        get
+        {
+            float floor = Body.Sex.MedicalPullBodyFatPercent();
+            float start = Record.StartBodyFatPercent;
+            if (start <= floor) return 0f;
+            return Math.Clamp((Body.BodyFatPercent - floor) / (start - floor), 0f, 1f);
+        }
+    }
+
     /// <summary>Insulation available at night: clothing, bag, and whatever is built.</summary>
     public float AvailableClo =>
         ShelterTable.BaseClothingClo + ShelterTable.SleepingBagClo + ShelterTable.Get(Shelter).Clo;
@@ -136,6 +186,10 @@ public sealed class Run
         ShelterProgressSlots -= needed;
         Shelter = next;
 
+        // A better camp stores more. This is what turns preservation into the
+        // lever doc 8 claims it is.
+        Larder.CapacityKg = Larder.CapacityFor((int)next, attributes[AttributeKind.Bushcraft]);
+
         // Spec 5.6: shelter tier milestone is +12.
         Morale.ApplyEvent(MoraleSource.ShelterMilestone, b.MoraleShelterMilestone, b);
         Record.Trace.Add(new TraceEntry
@@ -145,6 +199,13 @@ public sealed class Run
             Magnitude = ShelterTable.Get(next).Clo
         });
     }
+
+    /// <summary>
+    /// Night temperature for the MVP biome, falling across the run. Balance doc
+    /// 5.2 and 6.1 both key off this - it drives clo demand and firewood need.
+    /// </summary>
+    public static float NightTempForDay(int dayNumber) =>
+        12f - 17f * Math.Clamp((dayNumber - 1) / 75f, 0f, 1f);
 
     private static ShelterTier NextTier(ShelterTier current) => current switch
     {
@@ -178,6 +239,39 @@ public sealed class Run
 
         int slots = Calendar.SlotsForDay(DayNumber);
 
+        // ---- acute events ----
+        // Rolled BEFORE slots are spent, because an injury costs you the day it
+        // happens, and a storm decides whether you sleep dry.
+        var acute = AcuteEvents.Roll(DayNumber, Morale.Resolve, Shelter != ShelterTier.None, Rng, b);
+        bool soaked = plan.SoakedAtSleep;
+        bool voluntaryTapOut = false;
+
+        switch (acute.Kind)
+        {
+            case AcuteEventKind.MemoryEvent:
+                Morale.ApplyMemoryEvent(acute.Magnitude, b);
+                break;
+            case AcuteEventKind.Storm:
+                if (acute.Magnitude > 0f) soaked = true;
+                break;
+            case AcuteEventKind.Injury:
+                slots = Math.Max(1, slots - (int)acute.Magnitude);
+                break;
+        }
+
+        if (acute.Kind != AcuteEventKind.None)
+        {
+            Record.Trace.Add(new TraceEntry
+            {
+                Day = DayNumber, Slot = 0,
+                Kind = acute.Kind == AcuteEventKind.MemoryEvent ? TraceKind.MoraleEvent
+                     : acute.Kind == AcuteEventKind.Injury ? TraceKind.Injury
+                     : TraceKind.WeatherEvent,
+                Code = acute.Code,
+                Magnitude = acute.Magnitude
+            });
+        }
+
         // ---- burn ----
         float burn = Body.EffectiveBasalMetabolicRate(b);
         bool anyBuildProgress = false;
@@ -193,6 +287,8 @@ public sealed class Run
             {
                 anyBuildProgress = true;
                 if (activity == Activity.ShelterBuild) AdvanceShelter(b);
+                if (activity == Activity.RenderMarrow) Larder.RenderMarrow(1f, b);
+                if (activity == Activity.WhittleComfortProject) AdvanceComfortProject(b);
             }
 
             // Working a slot may produce food. This is where Hunting and Foraging
@@ -203,7 +299,7 @@ public sealed class Run
                 var caught = Harvest.Resolve(activity, season, attributes[governing.Value], Rng);
                 if (caught.CaughtSomething)
                 {
-                    Larder.Add(caught.ProteinG, caught.FatG);
+                    Larder.Add(caught.ProteinG, caught.FatG, caught.EdibleKg);
                     harvestedKg += caught.EdibleKg;
 
                     // Spec 5.6: a large food success is worth +10 morale. Without
@@ -221,13 +317,21 @@ public sealed class Run
             }
         }
 
+        // The decision to walk is available every day; a crisis amplifies it.
+        if (AcuteEvents.ConsidersTappingOut(
+                DayNumber, Morale.Resolve, Morale.Current, BodyConditionRatio,
+                acute.Kind == AcuteEventKind.MemoryEvent, Rng, b))
+        {
+            voluntaryTapOut = true;
+        }
+
         // ---- intake ----
         // Appetite is what the day cost. The larder rarely covers it, and the
         // protein ceiling then caps what of it the body can actually use.
         var meal = plan.DirectRation ?? Larder.Eat(burn, Body.WeightKg, b);
         var nutrition = NutritionModel.Evaluate(meal, Body.WeightKg, b);
 
-        Larder.ApplyDailySpoilage();
+        Larder.ApplyDailySpoilage(NightTempForDay(DayNumber));
 
         float daysOfFood = Larder.DaysOfFood(Body.WeightKg, b);
 
@@ -244,9 +348,9 @@ public sealed class Run
         var moraleTotals = Morale.EvaluateDay(new MoraleDayInputs
         {
             FoodInsecure = foodInsecure,
-            ShelterInadequate = plan.ShelterInadequate,
+            ShelterInadequate = AvailableClo < ShelterTable.CloDemandForNightTemp(NightTempForDay(DayNumber)),
             NoBuildProgress = !anyBuildProgress,
-            SoakedAtSleep = plan.SoakedAtSleep,
+            SoakedAtSleep = soaked,
             WeightLossFraction = Body.WeightLossFraction,
             HasPhoto = plan.HasPhoto
         }, b);
@@ -262,7 +366,7 @@ public sealed class Run
             Magnitude = net
         });
 
-        var end = CheckEndConditions(b);
+        var end = CheckEndConditions(b, voluntaryTapOut);
         if (end != EndCondition.None) Finish(end);
 
         Record.DaysSurvived = DayNumber;
@@ -272,6 +376,7 @@ public sealed class Run
             DayNumber = DayNumber,
             SlotsAvailable = slots,
             BurnKcal = burn,
+            Event = acute.Kind,
             HarvestedKg = harvestedKg,
             LarderDaysOfFood = daysOfFood,
             FoodInsecure = foodInsecure,
@@ -285,9 +390,9 @@ public sealed class Run
     }
 
     /// <summary>Design spec 6. Checked in a fixed order so the recorded cause is deterministic.</summary>
-    private EndCondition CheckEndConditions(BalanceData b)
+    private EndCondition CheckEndConditions(BalanceData b, bool voluntaryTapOut)
     {
-        if (Morale.HasTappedOut) return EndCondition.TapOut;
+        if (voluntaryTapOut || Morale.HasTappedOut) return EndCondition.TapOut;
 
         if (Body.BodyFatPercent < Body.Sex.MedicalPullBodyFatPercent()) return EndCondition.MedicalPull;
         if (Body.WeightLossFraction > b.MedicalPullMaxWeightLossFraction) return EndCondition.MedicalPull;

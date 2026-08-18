@@ -17,7 +17,7 @@ public sealed class RunTests
         [AttributeKind.Hunting] = 6,
         [AttributeKind.Foraging] = 3,
         [AttributeKind.Fitness] = 8,
-        [AttributeKind.Resolve] = 6,
+        [AttributeKind.Resolve] = 10,
         [AttributeKind.ColdAdaptation] = 5
     };
 
@@ -31,7 +31,7 @@ public sealed class RunTests
     /// </summary>
     private static DayPlan WorkingDay(Macros eaten, bool foodInsecure = false) => new()
     {
-        Slots = new[] { Activity.ShelterBuild, Activity.Fishing, Activity.Rest, Activity.Rest, Activity.Rest },
+        Slots = new[] { Activity.ShelterBuild, Activity.WhittleComfortProject, Activity.Rest, Activity.Rest, Activity.Rest },
         DirectRation = eaten
     };
 
@@ -82,7 +82,7 @@ public sealed class RunTests
         // penalty ends the run before the slot curve can be observed.
         var fed = new DayPlan
         {
-            Slots = new[] { Activity.ShelterBuild, Activity.Rest, Activity.Rest, Activity.Rest, Activity.Rest },
+            Slots = new[] { Activity.ShelterBuild, Activity.WhittleComfortProject, Activity.Rest, Activity.Rest, Activity.Rest },
             DirectRation = new Macros(200f, 400f, 0f)
         };
 
