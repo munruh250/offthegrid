@@ -4,6 +4,7 @@ using OffTheGrid.Data;
 using OffTheGrid.Data.Balance;
 using OffTheGrid.Sim.Body;
 using OffTheGrid.Sim.Events;
+using OffTheGrid.Sim.Fire;
 using OffTheGrid.Sim.Food;
 using OffTheGrid.Sim.Logging;
 using OffTheGrid.Sim.Morale;
@@ -40,6 +41,10 @@ public readonly record struct DayResult
     public int SlotsAvailable { get; init; }
     public float BurnKcal { get; init; }
     public AcuteEventKind Event { get; init; }
+    public float FireQuality { get; init; }
+    public float WoodKg { get; init; }
+    public float LocalDepletion { get; init; }
+    public bool RelocationAvailable { get; init; }
     public float HarvestedKg { get; init; }
     public float LarderDaysOfFood { get; init; }
     public bool FoodInsecure { get; init; }
@@ -109,7 +114,8 @@ public sealed class Run
     }
 
     /// <summary>Edible mass that counts as a "large food success". A good salmon or better.</summary>
-    private const float LargeCatchKg = 4f;
+    /// <summary>Edible mass at which a catch delivers the full morale reward.</summary>
+    private const float LargeCatchKg = 12f;
 
     public Rng Rng { get; }
     public SimLog Log { get; }
@@ -120,6 +126,79 @@ public sealed class Run
 
     /// <summary>The ten items. Design spec 4.4.</summary>
     public Loadout Gear { get; }
+
+    /// <summary>
+    /// How worked-out the ground around camp is, 1.0 fresh down to near zero.
+    /// Design spec 8.2: animals live on the map and hunted tiles thin out. This
+    /// is what eventually forces a move, and it is the pressure doc 12's
+    /// relocation triggers were written against.
+    /// </summary>
+    public float LocalDepletion { get; private set; } = 1f;
+
+    /// <summary>Effective richness of the ground actually being worked.</summary>
+    public float EffectiveTerritory => TerritoryQuality * LocalDepletion;
+
+    /// <summary>Consecutive days the food trigger has been satisfied. Doc 12 s2.1.</summary>
+    public int FoodTriggerDays { get; private set; }
+
+    /// <summary>Consecutive nights the shelter trigger has been satisfied. Doc 12 s2.2.</summary>
+    public int ShelterTriggerDays { get; private set; }
+
+    /// <summary>Times this run has relocated.</summary>
+    public int Relocations { get; private set; }
+
+    /// <summary>
+    /// Whether relocation is currently available. Doc 12: relocation requires an
+    /// ACTIVE TRIGGER - it is not available on demand, which is the primary
+    /// guard against farming its net-positive morale cycle.
+    /// </summary>
+    public bool CanRelocate(BalanceData b) =>
+        FoodTriggerDays >= b.TriggerConfirmDays || ShelterTriggerDays >= b.TriggerConfirmDays;
+
+    /// <summary>
+    /// Move camp. Doc 12: lose the shelter entirely, carry one cache at most,
+    /// arrive on fresh ground. The morale hit scales with what was abandoned and
+    /// is capped below the rebuild reward so the cycle is never a death spiral.
+    /// </summary>
+    public bool Relocate(BalanceData b)
+    {
+        if (IsOver || !CanRelocate(b)) return false;
+
+        float hit = Math.Min(
+            b.ShelterLossMoralePerSlot * ShelterTable.Get(Shelter).Slots,
+            b.ShelterLossMoraleCap);
+        Morale.ApplyEvent(MoraleSource.ShelterLost, -hit, b);
+
+        // Carry capacity is roughly one cache pit's worth - the sharpest decision
+        // in the system, and it falls straight out of bodyweight.
+        float carryKg = Body.WeightKg * b.CarryFractionOfBodyweight;
+        Larder.TrimTo(carryKg);
+
+        // Cordage survives only under the softened variant.
+        if (b.RelocationVariant == RelocationVariant.TotalLoss) WoodKg = 0f;
+
+        Shelter = ShelterTier.None;
+        ShelterProgressSlots = 0f;
+        Larder.CapacityKg = Larder.CapacityFor(0, attributes[AttributeKind.Bushcraft]);
+
+        LocalDepletion = 1f;
+        FoodTriggerDays = 0;
+        ShelterTriggerDays = 0;
+        Relocations++;
+
+        Record.Trace.Add(new TraceEntry
+        {
+            Day = DayNumber, Slot = 0, Kind = TraceKind.Relocation,
+            Code = "relocation.moved", Magnitude = hit
+        });
+        return true;
+    }
+
+    /// <summary>Firewood in hand, kg. Balance doc 4.</summary>
+    public float WoodKg { get; private set; }
+
+    /// <summary>How well last night's fire was fed, 0 to 1.</summary>
+    public float LastFireQuality { get; private set; } = 1f;
 
     /// <summary>
     /// How good the ground around camp is, as a multiplier on encounter rates.
@@ -314,6 +393,7 @@ public sealed class Run
         var acute = AcuteEvents.Roll(DayNumber, Morale.Resolve, Shelter != ShelterTier.None, Rng, b);
         bool soaked = plan.SoakedAtSleep;
         bool voluntaryTapOut = false;
+        bool gearIsDry = false;
 
         switch (acute.Kind)
         {
@@ -348,6 +428,10 @@ public sealed class Run
         var season = Calendar.SeasonForDay(DayNumber);
         float harvestedKg = 0f;
 
+        // How desperate the player was when the day started, for scaling the
+        // relief a catch brings.
+        float larderDaysBefore = Larder.DaysOfFood(Body.WeightKg, b);
+
         for (int i = 0; i < Math.Min(slots, plan.Slots.Count); i++)
         {
             var activity = plan.Slots[i];
@@ -363,22 +447,49 @@ public sealed class Run
 
             if (activity == Activity.Exploring) Prospect();
 
+            float wood = Firewood.YieldPerSlot(activity, Gear, attributes[AttributeKind.Bushcraft]);
+            if (wood > 0f) WoodKg += wood;
+
+            // Drying gear was inert. Wet insulation is barely insulation, so this
+            // is the answer to a storm rather than a wasted slot.
+            if (activity == Activity.DryGearAtFire && LastFireQuality > 0.3f) gearIsDry = true;
+
             // Working a slot may produce food. This is where Hunting and Foraging
             // finally matter, and where two runs on different seeds diverge.
             var governing = Harvest.GoverningAttribute(activity);
             if (governing.HasValue)
             {
-                var caught = Harvest.Resolve(activity, season, attributes[governing.Value], Gear, Rng, TerritoryQuality);
+                var caught = Harvest.Resolve(activity, season, attributes[governing.Value], Gear, Rng, EffectiveTerritory);
                 if (caught.CaughtSomething)
                 {
-                    Larder.Add(caught.ProteinG, caught.FatG, caught.EdibleKg);
+                    Larder.Add(caught.ProteinG, caught.FatG, caught.CarbohydrateG, caught.EdibleKg);
                     harvestedKg += caught.EdibleKg;
+
+                    // Working the ground thins it. Doc 12's trigger A is this
+                    // number crossing a threshold.
+                    LocalDepletion = Math.Max(0.15f, LocalDepletion - 0.004f * caught.EdibleKg);
 
                     // Spec 5.6: a large food success is worth +10 morale. Without
                     // this every run is a one-way slide, because the daily losses
                     // have nothing to push back against.
-                    if (caught.EdibleKg >= LargeCatchKg)
-                        Morale.ApplyEvent(MoraleSource.LargeFoodSuccess, b.MoraleLargeFoodSuccess, b);
+                    // EVERY catch is a lift, and the lift is bigger when you are
+                    // desperate. A hare is 0.8 kg and used to clear no threshold
+                    // at all, so a starving player could snare a rabbit and feel
+                    // nothing - which is exactly backwards. Someone who has not
+                    // eaten in three days is elated by a rabbit; someone with a
+                    // full rack is mildly pleased.
+                    //
+                    // This is deliberately a MORALE reward rather than a
+                    // nutritional one. The macro model stays honest - a lean
+                    // animal really is lean - while the moment of catching it
+                    // reads the way it should.
+                    float sizeTerm = 2f + (b.MoraleLargeFoodSuccess - 2f)
+                                          * MathF.Min(1f, caught.EdibleKg / LargeCatchKg);
+                    float desperation = 1f + 1.5f * (1f - MathF.Min(1f, larderDaysBefore));
+                    var source = activity == Activity.Foraging
+                        ? MoraleSource.BeachcombFind
+                        : MoraleSource.LargeFoodSuccess;
+                    Morale.ApplyEvent(source, sizeTerm * desperation, b);
                     Record.Trace.Add(new TraceEntry
                     {
                         Day = DayNumber, Slot = i, Kind = TraceKind.Action,
@@ -397,8 +508,18 @@ public sealed class Run
             voluntaryTapOut = true;
         }
 
-        // Cold costs calories, not just morale.
-        float cloDeficit = CloDemandTonight(DayNumber) - AvailableClo;
+        // ---- the fire ----
+        // Burn what the night demands, or as much of it as there is. A fire that
+        // runs out at 2am is worth a fraction of one that runs to dawn.
+        float woodDemand = Firewood.NightlyDemandKg(NightTempForDay(DayNumber), Shelter);
+        float woodBurned = Math.Min(WoodKg, woodDemand);
+        WoodKg -= woodBurned;
+        LastFireQuality = woodDemand <= 0f ? 1f : woodBurned / woodDemand;
+
+        // Cold costs calories, not just morale - and the fire is what stands
+        // between the player and that bill.
+        float warmth = AvailableClo + Firewood.FireClo(LastFireQuality);
+        float cloDeficit = CloDemandTonight(DayNumber) - warmth;
         burn += EnergyModel.ThermoregulationKcal(cloDeficit, Body.WeightKg, b);
 
         // ---- intake ----
@@ -424,9 +545,9 @@ public sealed class Run
         var moraleTotals = Morale.EvaluateDay(new MoraleDayInputs
         {
             FoodInsecure = foodInsecure,
-            ShelterInadequate = AvailableClo < CloDemandTonight(DayNumber),
+            ShelterInadequate = warmth < CloDemandTonight(DayNumber),
             NoBuildProgress = !anyBuildProgress,
-            SoakedAtSleep = soaked,
+            SoakedAtSleep = soaked && !gearIsDry,
             WeightLossFraction = Body.WeightLossFraction,
             HasPhoto = plan.HasPhoto
         }, b);
@@ -442,6 +563,11 @@ public sealed class Run
             Magnitude = net
         });
 
+        // Doc 12 triggers, evaluated at the day boundary.
+        FoodTriggerDays = LocalDepletion < b.FoodTriggerThreshold ? FoodTriggerDays + 1 : 0;
+        ShelterTriggerDays = (CloDemandTonight(DayNumber) - warmth) > b.CloGapThreshold
+            ? ShelterTriggerDays + 1 : 0;
+
         var end = CheckEndConditions(b, voluntaryTapOut);
         if (end != EndCondition.None) Finish(end);
 
@@ -453,6 +579,10 @@ public sealed class Run
             SlotsAvailable = slots,
             BurnKcal = burn,
             Event = acute.Kind,
+            FireQuality = LastFireQuality,
+            WoodKg = WoodKg,
+            LocalDepletion = LocalDepletion,
+            RelocationAvailable = CanRelocate(b),
             HarvestedKg = harvestedKg,
             LarderDaysOfFood = daysOfFood,
             FoodInsecure = foodInsecure,

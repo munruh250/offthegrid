@@ -19,6 +19,7 @@ public sealed class Larder
 {
     private float proteinG;
     private float fatG;
+    private float carbohydrateG;
     private float boneKg;
 
     /// <summary>
@@ -50,6 +51,9 @@ public sealed class Larder
     public float ProteinG => proteinG;
     public float FatG => fatG;
 
+    /// <summary>Stored carbohydrate. Bypasses the protein ceiling entirely.</summary>
+    public float CarbohydrateG => carbohydrateG;
+
     /// <summary>
     /// Bone held from past kills, awaiting rendering. Balance doc 3.4 puts marrow
     /// at ~180 kcal/kg of bone, almost pure fat.
@@ -57,10 +61,12 @@ public sealed class Larder
     public float BoneKg => boneKg;
 
     /// <summary>Rough edible mass, from macro density. Used against capacity.</summary>
-    public float StoredKg => (proteinG + fatG) / 1000f * 4f;
+    public float StoredKg => (proteinG + fatG + carbohydrateG) / 1000f * 4f;
 
     public float GrossKcal(BalanceData balance) =>
-        proteinG * balance.KcalPerGramProtein + fatG * balance.KcalPerGramFat;
+        proteinG * balance.KcalPerGramProtein
+      + fatG * balance.KcalPerGramFat
+      + carbohydrateG * balance.KcalPerGramCarbohydrate;
 
     /// <summary>
     /// Days of food held: stored protein divided by the daily protein ceiling.
@@ -93,7 +99,7 @@ public sealed class Larder
     /// slots processing costs - is what caps banking, NOT aggressive rot: "the
     /// player banks 30-50 kg and loses the remainder."
     /// </summary>
-    public void Add(float protein, float fat, float edibleKg = 0f)
+    public void Add(float protein, float fat, float carbohydrate = 0f, float edibleKg = 0f)
     {
         boneKg += edibleKg * BoneFractionOfEdible;
 
@@ -103,8 +109,10 @@ public sealed class Larder
         float kept = 1f - processingLoss;
         protein *= kept;
         fat *= kept;
+        carbohydrate *= kept;
         proteinG += protein;
         fatG += fat;
+        carbohydrateG += carbohydrate;
 
         float overflow = StoredKg - CapacityKg;
         if (overflow > 0f)
@@ -112,6 +120,7 @@ public sealed class Larder
             float keep = CapacityKg / StoredKg;
             proteinG *= keep;
             fatG *= keep;
+            carbohydrateG *= keep;
         }
     }
 
@@ -147,11 +156,26 @@ public sealed class Larder
         }
 
         fraction = Math.Clamp(fraction, 0f, 1f);
-        var meal = new Macros(proteinG * fraction, fatG * fraction, 0f);
+        var meal = new Macros(proteinG * fraction, fatG * fraction, carbohydrateG * fraction);
 
         proteinG -= meal.ProteinG;
         fatG -= meal.FatG;
+        carbohydrateG -= meal.CarbohydrateG;
         return meal;
+    }
+
+    /// <summary>
+    /// Cut the store down to what can be carried. Doc 12: you can move one cache
+    /// and no more, and everything else is abandoned.
+    /// </summary>
+    public void TrimTo(float carryKg)
+    {
+        if (StoredKg <= carryKg || StoredKg <= 0f) return;
+        float keep = carryKg / StoredKg;
+        proteinG *= keep;
+        fatG *= keep;
+        carbohydrateG *= keep;
+        boneKg *= keep;
     }
 
     /// <summary>

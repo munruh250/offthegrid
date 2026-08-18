@@ -144,4 +144,97 @@ Resolve's dominance was narrowed this pass (divisor 12 → 16, base rate compens
 
 ---
 
-*Status: v0.1, measured against the M0 build at 137 passing tests. Reproducible from the sweeps in `Solver` and the marginal-value probes.*
+---
+
+## 6. Rebalance pass — results
+
+### 6.1 Doc-to-code coverage, automated
+
+An automated check compared every declared balance constant, gear item and
+activity against its actual reads. It found substantially more than the five
+already known:
+
+| | Before | After |
+|---|---|---|
+| Balance constants never read | **9 of 45** | **2 of 45** |
+| Inert activities (cost calories, do nothing) | 6 | 2 (`Sleep`, `Rest` — correct) |
+| Gear items with no effect | 1 | 0 |
+
+The two remaining constants (`CatchmentRadius`, `FoodVisibleDegradation`) are map
+and UI concerns that genuinely need the map layer, so they are pending rather than
+dead.
+
+**Whole systems found unimplemented:**
+
+- **The entire firewood economy** (doc §4). `ChoppingWood`, `Sawing` and
+  `HaulingLogs` all cost calories and produced nothing; the fire had no
+  mechanical presence at all. This is the section whose own text says *"the
+  late-game difficulty curve emerges entirely from these two tables."* Now
+  implemented, and with thermoregulation added it gives the axe, the saw and
+  Bushcraft a reason to exist in a loadout that was otherwise all fishing tackle.
+- **The entire relocation system** (doc 12 — a full design document). Now
+  implemented: local depletion, both triggers, the carry limit, and the
+  shelter-loss morale hit.
+- **`DryGearAtFire`** was inert; it now answers a storm.
+- **The beachcomb morale gain** was never awarded.
+
+### 6.2 The bug that was killing the foraging route
+
+**The larder silently discarded all carbohydrate.** It stored protein and fat
+only, so berries — the one food in the game that bypasses the protein ceiling,
+and the entire strategic basis of the foraging route — contributed nothing on
+storage. Foraging was not under-tuned; its payload was being thrown away.
+
+Fixed through the whole chain (`FoodEntry` → `Harvest` → `Larder` → meal), and
+Foraging's value rose **7×**, from 0.07 to 0.57 days per point.
+
+### 6.3 Attribute value after the pass
+
+| Attribute | Before | After |
+|---|---|---|
+| Resolve | 3.86 | **3.24** |
+| Bushcraft | 1.82 | 1.03 |
+| Cold Adaptation | **0.00** | 1.37 |
+| Foraging | **0.07** | 0.57 |
+| Hunting | 0.29 | 0.35 |
+| Fitness | 0.15 | 0.24 |
+
+The spread narrowed from 55× to 14×. Cold Adaptation and Foraging are no longer
+dead. Resolve is still the meta.
+
+### 6.4 Food routes are still not balanced, and now we know why
+
+| Route | Days |
+|---|---|
+| Fishing | **46.1** |
+| Foraging | 35.7 |
+| Hunting | 31.9 |
+| Trapping | 31.3 |
+
+Cutting late-season fishing hard barely moved it — 47.6 down to 46.1. The reason
+is structural rather than numeric:
+
+| Season | Runs still alive entering it |
+|---|---|
+| Salmon run (1–20) | **100%** |
+| Tapering (21–35) | 84% |
+| Lean (36–50) | 76% |
+| Winter (51+) | **25%** |
+
+**The run is decided in the abundance window.** Only 25% of runs reach winter, so
+a route whose niche is the late game cannot influence the outcome — three
+quarters of players never see it. Fishing dominates because fishing owns days
+1–20, and days 1–20 own the run.
+
+That makes seasonal niches the *wrong lever* until run length rises. The
+sequencing is:
+
+1. **Raise typical run length toward the day-60 target** so the seasonal
+   structure has time to express itself at all.
+2. *Then* tune the niches, which will finally reach a majority of players.
+
+Tuning niches first is fitting a curve to a season most runs never enter.
+
+---
+
+*Status: v0.2, measured against the M0 build at 137 passing tests. Reproducible from the sweeps in `Solver` and the marginal-value probes.*

@@ -50,12 +50,27 @@ public readonly record struct FoodEntry(
     /// </summary>
     public float FatCalorieFraction => Kcal <= 0f ? 0f : FatG * 9f / Kcal;
 
-    /// <summary>Macros for a given edible mass in kg, scaled linearly.</summary>
-    public (float ProteinG, float FatG) MacrosForKg(float kg)
+    /// <summary>
+    /// Carbohydrate, derived from whatever calories protein and fat do not
+    /// account for. Only the plant foods carry any - and carbohydrate is the ONLY
+    /// macro that sidesteps the protein ceiling, which is the entire strategic
+    /// point of the foraging route.
+    /// </summary>
+    public float CarbohydrateG
     {
-        if (EdibleKg <= 0f) return (0f, 0f);
+        get
+        {
+            float fromProteinAndFat = ProteinG * 4f + FatG * 9f;
+            return MathF.Max(0f, (Kcal - fromProteinAndFat) / 4f);
+        }
+    }
+
+    /// <summary>Macros for a given edible mass in kg, scaled linearly.</summary>
+    public (float ProteinG, float FatG, float CarbohydrateG) MacrosForKg(float kg)
+    {
+        if (EdibleKg <= 0f) return (0f, 0f, 0f);
         float scale = kg / EdibleKg;
-        return (ProteinG * scale, FatG * scale);
+        return (ProteinG * scale, FatG * scale, CarbohydrateG * scale);
     }
 }
 

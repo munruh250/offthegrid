@@ -24,6 +24,7 @@ public readonly record struct HarvestResult
     public float EdibleKg { get; init; }
     public float ProteinG { get; init; }
     public float FatG { get; init; }
+    public float CarbohydrateG { get; init; }
 
     /// <summary>Found it and lost it. The show's most common hunting beat.</summary>
     public bool MissedOpportunity => Encountered && !CaughtSomething;
@@ -129,12 +130,12 @@ public static class Harvest
         ],
         [(Season.SalmonRun, Activity.TrapLine)] =
         [
-            new(FoodSource.SnowshoeHare, 0.20f),
-            new(FoodSource.Grouse, 0.10f)
+            new(FoodSource.SnowshoeHare, 0.22f),
+            new(FoodSource.Grouse, 0.12f)
         ],
         [(Season.SalmonRun, Activity.Foraging)] =
         [
-            new(FoodSource.Berries, 0.42f),
+            new(FoodSource.Berries, 0.52f),
             new(FoodSource.Mussels, 0.34f),
             new(FoodSource.SeaweedAndKelp, 0.14f),
             new(FoodSource.DungenessCrab, 0.10f)
@@ -143,9 +144,9 @@ public static class Harvest
         // --- Tapering: coho declining, fat sources thinning. ---
         [(Season.RunTapering, Activity.Fishing)] =
         [
-            new(FoodSource.CohoSalmon, 0.26f),
-            new(FoodSource.CutthroatTrout, 0.30f),
-            new(FoodSource.Rockfish, 0.28f)
+            new(FoodSource.CohoSalmon, 0.16f),
+            new(FoodSource.CutthroatTrout, 0.20f),
+            new(FoodSource.Rockfish, 0.18f)
         ],
         [(Season.RunTapering, Activity.HuntingStalk)] =
         [
@@ -157,12 +158,12 @@ public static class Harvest
         ],
         [(Season.RunTapering, Activity.TrapLine)] =
         [
-            new(FoodSource.SnowshoeHare, 0.20f),
-            new(FoodSource.Grouse, 0.09f)
+            new(FoodSource.SnowshoeHare, 0.26f),
+            new(FoodSource.Grouse, 0.14f)
         ],
         [(Season.RunTapering, Activity.Foraging)] =
         [
-            new(FoodSource.Berries, 0.26f),
+            new(FoodSource.Berries, 0.30f),
             new(FoodSource.Mussels, 0.34f),
             new(FoodSource.SeaweedAndKelp, 0.16f),
             new(FoodSource.DungenessCrab, 0.08f)
@@ -171,19 +172,19 @@ public static class Harvest
         // --- Lean season: the protein trap bites hardest. ---
         [(Season.Lean, Activity.Fishing)] =
         [
-            new(FoodSource.CutthroatTrout, 0.34f),
-            new(FoodSource.Rockfish, 0.36f)
+            new(FoodSource.CutthroatTrout, 0.16f),
+            new(FoodSource.Rockfish, 0.18f)
         ],
         [(Season.Lean, Activity.HuntingStalk)] =
         [
-            new(FoodSource.BlacktailDeer, 0.17f),
-            new(FoodSource.SnowshoeHare, 0.24f),
-            new(FoodSource.Grouse, 0.16f)
+            new(FoodSource.BlacktailDeer, 0.24f),
+            new(FoodSource.SnowshoeHare, 0.22f),
+            new(FoodSource.Grouse, 0.14f)
         ],
         [(Season.Lean, Activity.TrapLine)] =
         [
-            new(FoodSource.SnowshoeHare, 0.26f),
-            new(FoodSource.Grouse, 0.12f)
+            new(FoodSource.SnowshoeHare, 0.34f),
+            new(FoodSource.Grouse, 0.18f)
         ],
         [(Season.Lean, Activity.Foraging)] =
         [
@@ -194,18 +195,18 @@ public static class Harvest
         // --- Winter: cache or die. Bear denned, no fat source at all. ---
         [(Season.Winter, Activity.Fishing)] =
         [
-            new(FoodSource.Rockfish, 0.30f)
+            new(FoodSource.Rockfish, 0.12f)
         ],
         [(Season.Winter, Activity.HuntingStalk)] =
         [
-            new(FoodSource.BlacktailDeer, 0.13f),
-            new(FoodSource.SnowshoeHare, 0.20f),
-            new(FoodSource.Grouse, 0.11f)
+            new(FoodSource.BlacktailDeer, 0.20f),
+            new(FoodSource.SnowshoeHare, 0.18f),
+            new(FoodSource.Grouse, 0.10f)
         ],
         [(Season.Winter, Activity.TrapLine)] =
         [
-            new(FoodSource.SnowshoeHare, 0.21f),
-            new(FoodSource.Grouse, 0.09f)
+            new(FoodSource.SnowshoeHare, 0.30f),
+            new(FoodSource.Grouse, 0.16f)
         ],
         [(Season.Winter, Activity.Foraging)] =
         [
@@ -313,7 +314,7 @@ public static class Harvest
 
         float sizeFactor = 0.75f + rng.Stream("harvest.size").NextFloat() * 0.5f;
         float kg = entry.EdibleKg * sizeFactor * MathF.Sqrt(territoryQuality);
-        var (protein, fat) = entry.MacrosForKg(kg);
+        var (protein, fat, carbs) = entry.MacrosForKg(kg);
 
         // Good ground means animals in good CONDITION, and condition is carried
         // as fat. This matters far more than it looks: a ceiling-limited player
@@ -330,7 +331,8 @@ public static class Harvest
             Source = source,
             EdibleKg = kg,
             ProteinG = protein,
-            FatG = fat
+            FatG = fat,
+            CarbohydrateG = carbs
         };
     }
 }
