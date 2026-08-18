@@ -30,6 +30,27 @@ Cross-boundary work: split into two sessions, use `MinigameContext` /
 Never report a task complete without a passing verification run in the transcript.
 If a gate fails, fix it — do not describe the failure and stop.
 
+## Model routing — which model for which task
+
+The failure mode that matters in this repo is **silent and load-bearing**: code that
+compiles, passes the tests that exist, and is wrong in a way that surfaces much later.
+Determinism bugs are the canonical case (`Rng` once seeded from `string.GetHashCode()`,
+which .NET randomises per process — it looked fine and broke every replay).
+
+The dividing line is not task difficulty. It is **whether the gate would catch you.**
+
+| Use a cheaper model when | Use the strongest model when |
+|---|---|
+| Working INSIDE the tested surface | EXTENDING the tested surface |
+| Tests exist for what you're changing | You're writing the first test for it |
+| Failure is a red build | Failure is a wrong number that still passes |
+| Transcribing constants from `outputs/` | Deriving or reconciling constants |
+| Unity presentation and input | Anything in `Rng`, `ISimLog`, or save/replay |
+| Renames, refactors, boilerplate, CI | New type shapes that lock in downstream work |
+
+Regardless of model: never report a task complete without a passing verification run in
+the transcript. That rule is what makes a cheaper model safe here.
+
 ## Determinism — this breaks silently
 
 - Use `Rng.Stream(name)` (PCG32). NEVER `System.Random` or `UnityEngine.Random`.
