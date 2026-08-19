@@ -53,7 +53,11 @@ public sealed class BiomeTests
                 .Select(s => Routes.Select(a => ExpectedKcalPerSlot(b, s, a)).ToArray())
                 .Max(y => y.Max() / y.Min());
 
-        Assert.True(WorstSpread(Biome.ProvingGround) < WorstSpread(Biome.VancouverIsland) / 3.0);
+        // Vancouver Island has since been levelled deliberately, so the gap
+        // between it and the control is far smaller than when the control was
+        // built to expose an 11x imbalance. The control must still be the evener
+        // of the two, which is all it needs to be to isolate the biome variable.
+        Assert.True(WorstSpread(Biome.ProvingGround) < WorstSpread(Biome.VancouverIsland));
     }
 
     [Fact]
@@ -67,13 +71,20 @@ public sealed class BiomeTests
         double runFishing = ExpectedKcalPerSlot(Biome.VancouverIsland, Season.SalmonRun, Activity.Fishing);
         double winterFishing = ExpectedKcalPerSlot(Biome.VancouverIsland, Season.Winter, Activity.Fishing);
 
-        Assert.True(winterFishing < runFishing / 6.0,
-            "the salmon RUN must collapse afterwards, or it is not a run");
+        // Fishing DECLINES across the run without collapsing. The earlier version
+        // required winter fishing to fall below a sixth of the run, which was too
+        // steep - you can still fish through ice, and a route that becomes
+        // worthless stops being a decision.
+        Assert.True(winterFishing < runFishing * 0.75,
+            "fishing must be meaningfully better during the run");
+        Assert.True(winterFishing > runFishing * 0.25,
+            "...but it must not collapse - resident fish are still there in winter");
 
-        // And the routes that replace it must actually be there in winter.
+        // The trap line, by contrast, works all year.
+        double runTrapping = ExpectedKcalPerSlot(Biome.VancouverIsland, Season.SalmonRun, Activity.TrapLine);
         double winterTrapping = ExpectedKcalPerSlot(Biome.VancouverIsland, Season.Winter, Activity.TrapLine);
-        Assert.True(winterTrapping > winterFishing * 2.0,
-            "something must take over when the water goes dead");
+        Assert.True(Math.Abs(winterTrapping - runTrapping) / runTrapping < 0.2,
+            "a snare line should return about the same in any season");
     }
 
     [Fact]

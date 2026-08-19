@@ -93,6 +93,7 @@ public static class Harvest
             FoodSource.ChinookSalmon => 0.38f,   // big, strong, most likely to break off
             FoodSource.CohoSalmon => 0.48f,
             FoodSource.SockeyeSalmon => 0.52f,
+            FoodSource.Lingcod => 0.44f,
             _ => 0.58f
         },
 
@@ -104,6 +105,7 @@ public static class Harvest
             FoodSource.BlacktailDeer => 0.10f,
             FoodSource.SnowshoeHare => 0.22f,
             FoodSource.Grouse => 0.30f,
+            FoodSource.Squirrel => 0.34f,
             _ => 0.20f
         },
 

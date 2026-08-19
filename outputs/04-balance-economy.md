@@ -393,6 +393,25 @@ The first-pass values from the spec killed everyone by day 22. These are solved 
 
 **Update §5.6 of the design spec with these.** The direction of every change is the same — the original values were roughly twice as harsh as they needed to be.
 
+### 7.5 Resolve rescaled — RATIFIED 2026-08-19
+
+Resolve's impact is **halved across all four places it acts**. Measured, it was
+worth 3.24 days per attribute point against the next-best attribute's 1.03 — the
+last number out of range once the food routes were levelled, and enough on its own
+to decide contests.
+
+| Constant | Was | **Now** |
+|---|---|---|
+| Starting morale | `70 + 3·Resolve` | **`78 + 1.5·Resolve`** |
+| Memory-event resolve divisor | 12 | **24** |
+| Tap-out fragility divisor | 16 | **28** |
+| Comfort-project payout | `0.75 + 0.05·Resolve` | **`0.875 + 0.025·Resolve`** |
+
+Resolve remains the strongest single attribute at 1.66 days per point, which is
+faithful — mental toughness is what the format actually tests. It no longer
+decides a contest by itself. **This supersedes design spec §5.6's `M_start`
+formula.**
+
 ---
 
 ## 8. Tuning levers, in the order to reach for them

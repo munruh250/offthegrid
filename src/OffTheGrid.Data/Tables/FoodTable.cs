@@ -15,7 +15,14 @@ public enum FoodSource
     SnowshoeHare,
     CutthroatTrout,
     Rockfish,
+
+    /// <summary>Lingcod. Resident, year-round, and the only big fish left once the run ends.</summary>
+    Lingcod,
     Grouse,
+
+    /// <summary>Douglas squirrel. Tiny, but always somewhere.</summary>
+    Squirrel,
+
     Mussels,
     DungenessCrab,
 
@@ -96,7 +103,9 @@ public static class FoodTable
         [FoodSource.SnowshoeHare]   = new(FoodSource.SnowshoeHare,     1.4f,  0.8f,   1_332f,    254f,    27f),
         [FoodSource.CutthroatTrout] = new(FoodSource.CutthroatTrout,   1.0f,  0.55f,    654f,    109f,    19f),
         [FoodSource.Rockfish]       = new(FoodSource.Rockfish,         1.2f,  0.5f,     567f,    102f,     9f),
+        [FoodSource.Lingcod]        = new(FoodSource.Lingcod,          6.5f,  3.2f,    3168f,    608f,    70f),
         [FoodSource.Grouse]         = new(FoodSource.Grouse,           0.6f,  0.3f,     469f,     82f,    13f),
+        [FoodSource.Squirrel]       = new(FoodSource.Squirrel,         0.5f,  0.22f,    318f,     56f,     8f),
         [FoodSource.Mussels]        = new(FoodSource.Mussels,          1.0f,  0.3f,     258f,     36f,     7f),
         [FoodSource.DungenessCrab]  = new(FoodSource.DungenessCrab,    0.9f,  0.2f,     196f,     39f,     2f),
         // Per kg gathered. Carbohydrate-dominant, so they sidestep the protein
