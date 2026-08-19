@@ -48,7 +48,7 @@ Day 50 is terrifying because of what you did on day 30.
 
 ### 4.1 Attributes
 
-Six attributes, range **1–10**, default starting pool **30 points**, soft cap 8 at creation.
+Seven attributes, range **1–10**, default starting pool **38 points**, soft cap 8 at creation.
 
 | Attribute | Governs |
 |---|---|
@@ -64,10 +64,18 @@ was over-picked, and measurably: it governed three of the four food routes
 (fishing, trapping, stalking) against Foraging's one. Two contestants on identical
 loadouts differed 22% to 3% in win rate on nothing but Hunting 6 against Hunting 3.
 
-**Fishing now sits with Foraging.** The split is by verb rather than by target:
-**Foraging is what you gather** — shoreline, berries, and the water — while
-**Hunting is what you pursue**, on the stalk or in a snare. Six attributes are
-preserved.
+**Fishing becomes its own attribute — seven in total.** Reading water and setting
+a net has nothing to do with knowing which berries are safe, so folding it into
+Foraging would have repeated the same mistake in a different place. The three food
+attributes now split cleanly by method: **Fishing** (nets, lines, weirs),
+**Hunting** (stalk and snare), **Foraging** (shore, berries, plants).
+
+The starting pool rises from 33 to **38 points** to keep the per-attribute
+average steady across seven.
+
+**Roster rule, added at the same time:** every contestant prioritises at least one
+food method. A build with no way to eat is not an interesting archetype, it is a
+drafting mistake — and the field should not contain one by construction.
 
 **Origin** (city/region of birth) is flavour + a small biome-specific bonus (+1 effective Cold Adaptation in matching biome, dialogue colour). Never a hard wall.
 

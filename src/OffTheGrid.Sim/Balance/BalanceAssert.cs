@@ -31,11 +31,13 @@ public readonly record struct BalanceCheckResult(string Name, bool Passed, strin
 public static class BalanceAssert
 {
     private static IReadOnlyDictionary<AttributeKind, int> Build(
-        int bushcraft, int hunting, int foraging, int fitness, int resolve, int cold) =>
+        int bushcraft, int hunting, int foraging, int fitness, int resolve, int cold,
+        int fishing = 6) =>
         new Dictionary<AttributeKind, int>
         {
             [AttributeKind.Bushcraft] = bushcraft,
             [AttributeKind.Hunting] = hunting,
+            [AttributeKind.Fishing] = fishing,
             [AttributeKind.Foraging] = foraging,
             [AttributeKind.Fitness] = fitness,
             [AttributeKind.Resolve] = resolve,

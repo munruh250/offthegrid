@@ -107,11 +107,13 @@ public static class Solver
     // ---- standard scenarios ----
 
     private static IReadOnlyDictionary<AttributeKind, int> Attributes(
-        int bushcraft, int hunting, int foraging, int fitness, int resolve, int cold) =>
+        int bushcraft, int hunting, int foraging, int fitness, int resolve, int cold,
+        int fishing = 5) =>
         new Dictionary<AttributeKind, int>
         {
             [AttributeKind.Bushcraft] = bushcraft,
             [AttributeKind.Hunting] = hunting,
+            [AttributeKind.Fishing] = fishing,
             [AttributeKind.Foraging] = foraging,
             [AttributeKind.Fitness] = fitness,
             [AttributeKind.Resolve] = resolve,

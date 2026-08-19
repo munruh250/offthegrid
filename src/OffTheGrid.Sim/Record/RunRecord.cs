@@ -82,8 +82,25 @@ public sealed class RunRecord
 public enum AttributeKind
 {
     Bushcraft,
+
+    /// <summary>Stalking and trapping - what you PURSUE.</summary>
     Hunting,
+
+    /// <summary>
+    /// Nets, lines and weirs. [Q1 ANSWERED] Design spec 4.1 folded this into
+    /// Hunting and flagged "split it out if playtest shows Hunting is
+    /// over-picked." It was: Hunting governed three of four food routes against
+    /// Foraging's one, and two contestants on identical loadouts differed 22% to
+    /// 3% on nothing but Hunting 6 against Hunting 3.
+    ///
+    /// Its own attribute rather than folded into Foraging - reading water and
+    /// setting a net has nothing to do with knowing which berries are safe.
+    /// </summary>
+    Fishing,
+
+    /// <summary>Berries, shellfish, plants - what you GATHER, and what you can identify.</summary>
     Foraging,
+
     Fitness,
     Resolve,
     ColdAdaptation

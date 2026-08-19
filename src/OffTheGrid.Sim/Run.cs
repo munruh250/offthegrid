@@ -75,6 +75,15 @@ public sealed class Run
     private readonly int fitness;
     private readonly IReadOnlyDictionary<AttributeKind, int> attributes;
 
+    /// <summary>
+    /// Attribute lookup that defaults to the baseline rather than throwing.
+    /// Adding Fishing as a seventh attribute broke every caller that built a
+    /// six-entry dictionary; a sim should not crash because a sheet is missing a
+    /// line.
+    /// </summary>
+    private int Attr(AttributeKind kind) =>
+        attributes.TryGetValue(kind, out var v) ? v : 5;
+
     public Run(
         ulong seed,
         Sex sex,
@@ -97,7 +106,7 @@ public sealed class Run
         Rng = new Rng(seed);
         Log = new SimLog();
         Body = new BodyState(sex, heightCm, ageYears, weightKg, bodyFatPercent);
-        Morale = new MoraleState(attributes[AttributeKind.Resolve], b);
+        Morale = new MoraleState(attributes.TryGetValue(AttributeKind.Resolve, out var rv) ? rv : 5, b);
 
         fitness = attributes[AttributeKind.Fitness];
         this.attributes = attributes;
@@ -148,7 +157,7 @@ public sealed class Run
     public bool IsWinterized =>
         AvailableClo + Fire.Firewood.FireClo(1f)
         >= ShelterTable.CloDemandForNightTemp(Biome.NightTemperature(Schedule.WinterArrives, Schedule))
-           - 0.14f * (attributes[AttributeKind.ColdAdaptation] - 5);
+           - 0.14f * (Attr(AttributeKind.ColdAdaptation) - 5);
 
     /// <summary>
     /// How worked-out the ground around camp is, 1.0 fresh down to near zero.
@@ -202,7 +211,7 @@ public sealed class Run
 
         Shelter = ShelterTier.None;
         ShelterProgressSlots = 0f;
-        Larder.CapacityKg = Larder.CapacityFor(0, attributes[AttributeKind.Bushcraft]);
+        Larder.CapacityKg = Larder.CapacityFor(0, Attr(AttributeKind.Bushcraft));
 
         LocalDepletion = 1f;
         FoodTriggerDays = 0;
@@ -224,7 +233,7 @@ public sealed class Run
     /// being a free win.
     /// </summary>
     public float WorkCapacity =>
-        Body.PhysicalCapacity * (0.60f + 0.080f * attributes[AttributeKind.Fitness]);
+        Body.PhysicalCapacity * (0.60f + 0.080f * Attr(AttributeKind.Fitness));
 
     /// <summary>Camp structure currently under construction, if any.</summary>
     public CampStructure? BuildingNow { get; private set; }
@@ -337,7 +346,7 @@ public sealed class Run
     /// </summary>
     private void AdvanceComfortProject(BalanceData b)
     {
-        comfortProgressSlots += Harvest.SkillMultiplier(attributes[AttributeKind.Bushcraft]) * 1.15f;
+        comfortProgressSlots += Harvest.SkillMultiplier(Attr(AttributeKind.Bushcraft)) * 1.15f;
         if (comfortProgressSlots < SlotsPerComfortProject) return;
 
         comfortProgressSlots -= SlotsPerComfortProject;
@@ -345,7 +354,7 @@ public sealed class Run
 
         // Spec 4.1: Resolve governs "morale gained per comfort project". Another
         // clause that was specified and never implemented.
-        float payout = b.MoraleProjectCompleted * (0.875f + 0.025f * attributes[AttributeKind.Resolve]);
+        float payout = b.MoraleProjectCompleted * (0.875f + 0.025f * Attr(AttributeKind.Resolve));
         Morale.ApplyEvent(MoraleSource.ComfortProject, payout, b);
         Record.Trace.Add(new TraceEntry
         {
@@ -380,7 +389,7 @@ public sealed class Run
     public float CloDemandTonight(int dayNumber)
     {
         float raw = ShelterTable.CloDemandForNightTemp(NightTempForDay(dayNumber));
-        float offset = 0.14f * (attributes[AttributeKind.ColdAdaptation] - 5);
+        float offset = 0.14f * (Attr(AttributeKind.ColdAdaptation) - 5);
         return Math.Max(0f, raw - offset);
     }
 
@@ -397,7 +406,7 @@ public sealed class Run
         // shelter needs an axe AND a saw.
         if (next > GearEffects.MaxShelterTier(Gear)) return;
 
-        float bushcraft = attributes[AttributeKind.Bushcraft];
+        float bushcraft = Attr(AttributeKind.Bushcraft);
         ShelterProgressSlots += Harvest.SkillMultiplier((int)bushcraft);
 
         int needed = ShelterTable.Get(next).Slots - ShelterTable.Get(Shelter).Slots;
@@ -437,7 +446,7 @@ public sealed class Run
     /// </summary>
     private void Prospect()
     {
-        int fitness = attributes[AttributeKind.Fitness];
+        int fitness = Attr(AttributeKind.Fitness);
 
         // Fitness gets its own curve, steeper than the generic skill multiplier.
         // Ranging out is what this attribute is FOR, so the spread has to be wide
@@ -561,7 +570,7 @@ public sealed class Run
 
             if (activity == Activity.Exploring) Prospect();
 
-            float wood = Firewood.YieldPerSlot(activity, Gear, attributes[AttributeKind.Bushcraft]);
+            float wood = Firewood.YieldPerSlot(activity, Gear, Attr(AttributeKind.Bushcraft));
             if (wood > 0f) WoodKg += wood * WorkCapacity;
 
             // Drying gear was inert. Wet insulation is barely insulation, so this
@@ -682,7 +691,7 @@ public sealed class Run
         // 1.37 days per point with a bad kit and exactly 0.00 with a good one,
         // which makes it a stat nobody drafts on purpose.
         burn -= EnergyModel.SleepQualitySaving(
-            attributes[AttributeKind.ColdAdaptation], Body.WeightKg, NightTempForDay(DayNumber));
+            Attr(AttributeKind.ColdAdaptation), Body.WeightKg, NightTempForDay(DayNumber));
 
         // ---- intake ----
         // Appetite is what the day cost. The larder rarely covers it, and the
@@ -691,7 +700,7 @@ public sealed class Run
         var nutrition = NutritionModel.Evaluate(meal, Body.WeightKg, b);
 
         Larder.CapacityKg = Larder.CapacityFromStructures(NightTempForDay(DayNumber))
-                          + attributes[AttributeKind.Bushcraft];
+                          + Attr(AttributeKind.Bushcraft);
         Larder.ApplyDailySpoilage(NightTempForDay(DayNumber));
 
         float daysOfFood = Larder.DaysOfFood(Body.WeightKg, b);

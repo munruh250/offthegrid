@@ -1,5 +1,6 @@
 namespace OffTheGrid.Tests;
 
+using System;
 using System.Linq;
 using Xunit;
 using OffTheGrid.Data;
@@ -31,11 +32,28 @@ public sealed class ContestTests
     public void EveryContestantSpendsTheSameAttributePoints()
     {
         // The fairness guarantee: nobody in the field is handed better numbers,
-        // only different priorities.
+        // only different priorities. 38 points across SEVEN attributes since
+        // Fishing was split out of Hunting (Q1).
         foreach (var spec in Roster.Standard())
         {
-            int total = spec.Attributes.Values.Sum();
-            Assert.Equal(33, total);
+            Assert.Equal(38, spec.Attributes.Values.Sum());
+            Assert.Equal(7, spec.Attributes.Count);
+        }
+    }
+
+    [Fact]
+    public void EveryContestantHasAWayToEat()
+    {
+        // Nobody arrives on that beach without a plan for eating. A build with no
+        // food method is not an interesting archetype, it is a drafting mistake -
+        // and the field should not contain one by construction.
+        foreach (var spec in Roster.Standard())
+        {
+            int best = Math.Max(spec.Attributes[AttributeKind.Fishing],
+                       Math.Max(spec.Attributes[AttributeKind.Hunting],
+                                spec.Attributes[AttributeKind.Foraging]));
+            Assert.True(best >= 7,
+                $"{spec.Name} has no prioritised food method (best is {best})");
         }
     }
 
