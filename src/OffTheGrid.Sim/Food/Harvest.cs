@@ -82,6 +82,10 @@ public static class Harvest
         // point of skill moves less.
         Activity.Foraging => 0.70f + 0.060f * attribute,
 
+        // Fishing sits with Foraging now, on its own curve - one draw with a
+        // line, two with a net, so skill moves it more than gathering.
+        Activity.Fishing => 0.62f + 0.076f * attribute,
+
         _ => SkillMultiplier(attribute)
     };
 
@@ -157,7 +161,19 @@ public static class Harvest
     /// <summary>Which attribute governs this activity. Design spec 4.1.</summary>
     public static AttributeKind? GoverningAttribute(Activity activity) => activity switch
     {
-        Activity.Fishing => AttributeKind.Hunting,       // fishing folds into Hunting (Q1)
+        // [Q1 ANSWERED] Design spec 4.1 folded fishing into Hunting and flagged
+        // "split it out if playtest shows Hunting is over-picked." It does.
+        //
+        // Hunting was governing THREE of the four food routes - fishing, trapping
+        // and stalking - against Foraging's one. Measured, two contestants on
+        // IDENTICAL kits differed 22% to 3% in win rate, and the difference was
+        // Hunting 6 against Hunting 3. Per-point value looked level because each
+        // was measured on a plan using one route; coverage was not.
+        //
+        // Fishing moves to Foraging, which keeps six attributes and splits the
+        // routes evenly: Foraging takes what you GATHER (water and shore),
+        // Hunting takes what you PURSUE (stalk and snare).
+        Activity.Fishing => AttributeKind.Foraging,
         Activity.HuntingStalk => AttributeKind.Hunting,
         Activity.TrapLine => AttributeKind.Hunting,
         Activity.Foraging => AttributeKind.Foraging,

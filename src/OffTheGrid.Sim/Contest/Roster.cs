@@ -12,6 +12,16 @@ namespace OffTheGrid.Sim.Contest;
 /// deliberate and it is the fairness guarantee: nobody in the field is handed
 /// better numbers, only different priorities, which lead to different decisions
 /// and therefore different crises.
+///
+/// GEAR MATCHES THE SHEET. The loadouts were written before gear gated anything,
+/// and once it did, several builds were left unable to execute their own
+/// strategy - Moss carried Bushcraft 9 and no bow, which closed off a route worth
+/// 2.6x a slot entirely, and no amount of shelter skill converts into food.
+///
+/// The rule applied here: a contestant's four discretionary items must let their
+/// BEST attributes actually produce something. A build may still close a route
+/// off deliberately - that is a real choice - but only when what remains open is
+/// something their sheet is good at.
 /// </summary>
 public static class Roster
 {
@@ -59,38 +69,48 @@ public static class Roster
 
         new ContestantSpec { Name = "Dana",   Personality = Personality.AggressiveHunter,
             Attributes = Spread(4, 9, 3, 7, 5, 5), WeightKg = 90, BodyFatPercent = 22,
-            Gear = With(GearItem.BowAndArrows, GearItem.Axe, GearItem.SnareWire, GearItem.Saw) },
+            // Hunting 9. Bow is mandatory; the saw traded for tackle so a bad hunting week is survivable.
+            // Hunting 8, Fitness 9. Light and mobile - bow, snares, a line, and just enough axe.
+            Gear = With(GearItem.BowAndArrows, GearItem.SnareWire, GearItem.FishingLineAndHooks, GearItem.Axe) },
 
         new ContestantSpec { Name = "Moss",   Personality = Personality.PatientBuilder,
             Attributes = Spread(9, 4, 5, 4, 6, 5), WeightKg = 88, BodyFatPercent = 27,
-            Gear = With(GearItem.Axe, GearItem.Saw, GearItem.SnareWire, GearItem.FishingLineAndHooks) },
+            // Bushcraft 9, Hunting 4. Deliberately no bow - but a builder who can maintain a net gets a food route his sheet is actually good at.
+            Gear = With(GearItem.Axe, GearItem.Saw, GearItem.Gillnet, GearItem.SnareWire) },
 
         new ContestantSpec { Name = "Wren",   Personality = Personality.SteadyProvider,
             Attributes = Spread(5, 6, 4, 5, 8, 5), WeightKg = 82, BodyFatPercent = 25,
-            Gear = With(GearItem.Gillnet, GearItem.Axe, GearItem.SnareWire, GearItem.FishingLineAndHooks) },
+            // Resolve 8, balanced sheet. Steady kit.
+            Gear = With(GearItem.Gillnet, GearItem.SnareWire, GearItem.Axe, GearItem.FishingLineAndHooks) },
 
         new ContestantSpec { Name = "Cobb",   Personality = Personality.ConservativeRester,
             Attributes = Spread(6, 4, 5, 3, 9, 6), WeightKg = 104, BodyFatPercent = 33,
-            Gear = With(GearItem.Axe, GearItem.SnareWire, GearItem.FishingLineAndHooks, GearItem.Saw) },
+            // Resolve 9, Fitness 3. Passive income and a warm camp - the trap line and the log shelter.
+            Gear = With(GearItem.SnareWire, GearItem.FishingLineAndHooks, GearItem.Axe, GearItem.Saw) },
 
         new ContestantSpec { Name = "Ilse",   Personality = Personality.SteadyProvider, Sex = Sex.Female,
             Attributes = Spread(6, 5, 8, 4, 6, 4), WeightKg = 74, BodyFatPercent = 30,
-            Gear = With(GearItem.FishingLineAndHooks, GearItem.SnareWire, GearItem.Axe, GearItem.Gillnet) },
+            // Foraging 8 needs no gear, so the discretionary slots go to the routes that do.
+            Gear = With(GearItem.Gillnet, GearItem.SnareWire, GearItem.Axe, GearItem.FishingLineAndHooks) },
 
         new ContestantSpec { Name = "Tapio",  Personality = Personality.PatientBuilder,
             Attributes = Spread(7, 5, 4, 5, 4, 8), WeightKg = 92, BodyFatPercent = 26,
-            Gear = With(GearItem.Axe, GearItem.Saw, GearItem.FishingLineAndHooks, GearItem.SnareWire) },
+            // Bushcraft 7, Cold Adaptation 8. Builds the shelter that makes his cold resistance count, and nets rather than lines.
+            Gear = With(GearItem.Axe, GearItem.Saw, GearItem.Gillnet, GearItem.SnareWire) },
 
         new ContestantSpec { Name = "Rhodes", Personality = Personality.AggressiveHunter,
             Attributes = Spread(3, 8, 4, 9, 5, 4), WeightKg = 76, BodyFatPercent = 15,
-            Gear = With(GearItem.BowAndArrows, GearItem.SnareWire, GearItem.Axe, GearItem.FishingLineAndHooks) },
+            // Hunting 8, Fitness 9. Light and mobile - bow, snares, a line, and just enough axe.
+            Gear = With(GearItem.BowAndArrows, GearItem.SnareWire, GearItem.FishingLineAndHooks, GearItem.Axe) },
 
         new ContestantSpec { Name = "Marta",  Personality = Personality.ConservativeRester, Sex = Sex.Female,
             Attributes = Spread(6, 3, 6, 4, 8, 6), WeightKg = 79, BodyFatPercent = 34,
-            Gear = With(GearItem.SnareWire, GearItem.FishingLineAndHooks, GearItem.Axe, GearItem.Pot) },
+            // Resolve 8, Hunting 3. No bow is right for the sheet - so both fishing options instead.
+            Gear = With(GearItem.SnareWire, GearItem.Gillnet, GearItem.FishingLineAndHooks, GearItem.Axe) },
 
         new ContestantSpec { Name = "Osei",   Personality = Personality.SteadyProvider,
             Attributes = Spread(5, 7, 6, 6, 5, 4), WeightKg = 85, BodyFatPercent = 21,
-            Gear = With(GearItem.FishingLineAndHooks, GearItem.SnareWire, GearItem.Axe, GearItem.BowAndArrows) },
+            // Hunting 7, Foraging 6. The all-rounder, and kitted like one.
+            Gear = With(GearItem.BowAndArrows, GearItem.FishingLineAndHooks, GearItem.SnareWire, GearItem.Axe) },
     ];
 }

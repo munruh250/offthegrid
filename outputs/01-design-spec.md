@@ -59,7 +59,15 @@ Six attributes, range **1–10**, default starting pool **30 points**, soft cap 
 | **Resolve** | Morale event resistance, morale gained per comfort project, shivering tolerance |
 | **Cold Adaptation** | Thermoneutral offset, wet-cold resistance, sleep quality in poor shelter |
 
-*Fishing is folded into Hunting.* `[Q1]` Split it out if playtest shows Hunting is over-picked.
+*Fishing was folded into Hunting.* `[Q1]` **ANSWERED 2026-08-19 — SPLIT.** Hunting
+was over-picked, and measurably: it governed three of the four food routes
+(fishing, trapping, stalking) against Foraging's one. Two contestants on identical
+loadouts differed 22% to 3% in win rate on nothing but Hunting 6 against Hunting 3.
+
+**Fishing now sits with Foraging.** The split is by verb rather than by target:
+**Foraging is what you gather** — shoreline, berries, and the water — while
+**Hunting is what you pursue**, on the stalk or in a snare. Six attributes are
+preserved.
 
 **Origin** (city/region of birth) is flavour + a small biome-specific bonus (+1 effective Cold Adaptation in matching biome, dialogue colour). Never a hard wall.
 

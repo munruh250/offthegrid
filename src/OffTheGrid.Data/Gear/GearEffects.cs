@@ -42,9 +42,11 @@ public static class GearEffects
     /// <summary>Yield multiplier from the kit carried, once the activity is possible.</summary>
     public static float YieldMultiplier(Loadout gear, ActivityRequirement requirement) => requirement switch
     {
-        // A net fishes while you do something else. A line does not.
-        ActivityRequirement.Fishing =>
-            gear.Has(GearItem.Gillnet) ? 1.75f : 1.0f,
+        // A net fishes while you do something else - expressed as a second draw
+        // per slot (see Harvest.DrawsPerSlot), NOT as a yield multiplier on top.
+        // Stacking both made a gillnet worth 3.5x a line, which is more than any
+        // single item should be.
+        ActivityRequirement.Fishing => 1.0f,
 
         // Improvised cordage snares work, badly.
         ActivityRequirement.Trapping =>
