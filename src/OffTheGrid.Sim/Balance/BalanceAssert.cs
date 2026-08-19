@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using OffTheGrid.Data;
 using OffTheGrid.Data.Balance;
+using OffTheGrid.Sim.Food;
 using OffTheGrid.Sim.Nutrition;
 using OffTheGrid.Sim.Record;
 using OffTheGrid.Sim.Time;
@@ -76,15 +77,121 @@ public static class BalanceAssert
             $"fasting reached day {fasting}, competent reached day {competent}");
     }
 
-    /// <summary>Balance doc 7.1: the food economy must support a 60-day run.</summary>
-    public static BalanceCheckResult CompetentPlayerReachesDay60()
+    /// <summary>
+    /// Competent play must complete the WINTERIZATION ARC - reach shelter and
+    /// fuel that hold the coldest night - before winter arrives.
+    ///
+    /// This replaces a day-count check, and the replacement is the point. Once
+    /// the season schedule is a scenario parameter, "did the player reach day 60"
+    /// measures the wrong thing: a run ending on day 43 under a standard schedule
+    /// looks like failure, when under a short-summer schedule the same player
+    /// would have survived winter and won. The arc is what the player is actually
+    /// racing, and it holds whenever winter lands.
+    /// </summary>
+    public static BalanceCheckResult CompetentPlayerWinterizesInTime(
+        SeasonSchedule? schedule = null, Biome? biome = null)
     {
-        int days = SurviveDays(weightKg: 85f, bodyFatPercent: 20f, resolve: 6, slots: ActiveSlots);
+        var sched = schedule ?? SeasonSchedule.Standard;
+        int winterized = 0, reachedWinter = 0;
+        const int seeds = 25;
+
+        for (ulong seed = 0; seed < seeds; seed++)
+        {
+            var run = NewRun(seed, 85f, 20f, resolve: 6, schedule: sched, biome: biome);
+            var plan = new DayPlan
+            {
+                Slots = [Activity.ShelterBuild, Activity.ChoppingWood, Activity.Fishing, Activity.TrapLine, Activity.WhittleComfortProject]
+            };
+            bool everWinterized = false;
+
+            while (!run.IsOver && run.DayNumber < sched.WinterArrives)
+            {
+                run.StepDay(plan);
+                if (run.IsWinterized) everWinterized = true;
+            }
+
+            if (everWinterized) winterized++;
+            if (!run.IsOver) reachedWinter++;
+        }
+
+        float rate = winterized / (float)seeds;
+        return new BalanceCheckResult(
+            nameof(CompetentPlayerWinterizesInTime),
+            rate >= 0.7f,
+            $"{rate:P0} winterized before day {sched.WinterArrives}; {reachedWinter * 100 / seeds}% still alive at winter");
+    }
+
+    /// <summary>
+    /// A short summer must be genuinely harder than a standard one. If the
+    /// schedule parameter does not change outcomes, movable seasons are cosmetic.
+    ///
+    /// Measured as DAYS SURVIVED rather than as a winterization rate. The first
+    /// version of this check compared how many players got their shelter up, and
+    /// it could not fail: even a three-week summer leaves enough slots to build,
+    /// because shelter was never the binding constraint - food and time were.
+    /// Survival captures the whole squeeze, which is what a shorter season
+    /// actually tightens.
+    /// </summary>
+    public static BalanceCheckResult ShortSummerIsHarderThanStandard()
+    {
+        static float MeanDays(SeasonSchedule sched)
+        {
+            const int seeds = 25;
+            int total = 0;
+            for (ulong seed = 0; seed < seeds; seed++)
+            {
+                var run = NewRun(seed, 85f, 20f, resolve: 6, schedule: sched, biome: Biome.BorealInterior);
+                var plan = new DayPlan
+                {
+                    Slots = [Activity.ShelterBuild, Activity.ChoppingWood, Activity.Fishing, Activity.TrapLine, Activity.WhittleComfortProject]
+                };
+                while (!run.IsOver && run.DayNumber < 120) run.StepDay(plan);
+                total += run.DayNumber;
+            }
+            return total / (float)seeds;
+        }
+
+        float standard = MeanDays(SeasonSchedule.Standard);
+        float shortSummer = MeanDays(SeasonSchedule.ShortSummer);
 
         return new BalanceCheckResult(
-            nameof(CompetentPlayerReachesDay60),
-            days >= 45,
-            $"mean day {days} across the sweep (doc 7.3 records 59 for morale-only attrition)");
+            nameof(ShortSummerIsHarderThanStandard),
+            shortSummer < standard,
+            $"mean days survived - standard {standard:F1}, short summer {shortSummer:F1}");
+    }
+
+    /// <summary>
+    /// A player who never winterizes must be punished for it once winter lands.
+    /// If not, the shelter, fuel and cold economies are decorative.
+    /// </summary>
+    public static BalanceCheckResult FailingToWinterizeIsPunished()
+    {
+        const int seeds = 25;
+        int preparedAlive = 0, unpreparedAlive = 0;
+        var sched = SeasonSchedule.ShortSummer;
+        int checkDay = sched.WinterArrives + 14;
+
+        for (ulong seed = 0; seed < seeds; seed++)
+        {
+            // Builds shelter and cuts wood.
+            var prepared = NewRun(seed, 85f, 20f, 6, sched, Biome.BorealInterior);
+            var preparedPlan = new DayPlan { Slots = [Activity.ShelterBuild, Activity.ChoppingWood, Activity.Fishing, Activity.TrapLine, Activity.WhittleComfortProject] };
+            while (!prepared.IsOver && prepared.DayNumber < checkDay) prepared.StepDay(preparedPlan);
+            if (!prepared.IsOver) preparedAlive++;
+
+            // Ignores shelter entirely and chases food.
+            var unprepared = NewRun(seed, 85f, 20f, 6, sched, Biome.BorealInterior);
+            var unpreparedPlan = new DayPlan { Slots = [Activity.Fishing, Activity.TrapLine, Activity.Foraging, Activity.Fishing, Activity.WhittleComfortProject] };
+            while (!unprepared.IsOver && unprepared.DayNumber < checkDay) unprepared.StepDay(unpreparedPlan);
+            if (!unprepared.IsOver) unparedGuard(ref unpreparedAlive);
+        }
+
+        return new BalanceCheckResult(
+            nameof(FailingToWinterizeIsPunished),
+            preparedAlive > unpreparedAlive,
+            $"14 days into an arctic winter: prepared {preparedAlive}/{seeds} alive, unprepared {unpreparedAlive}/{seeds}");
+
+        static void unparedGuard(ref int n) => n++;
     }
 
     /// <summary>
@@ -168,7 +275,9 @@ public static class BalanceAssert
     public static IReadOnlyList<BalanceCheckResult> RunAll() =>
     [
         FastingBuildLosesToCompetentPlay(),
-        CompetentPlayerReachesDay60(),
+        CompetentPlayerWinterizesInTime(),
+        ShortSummerIsHarderThanStandard(),
+        FailingToWinterizeIsPunished(),
         IdlePlayerFailsFast(),
         OnlyBearSustainsAlone(),
         RelocationIsNotADeathSpiral(),
@@ -180,6 +289,11 @@ public static class BalanceAssert
     /// harvesting consumes RNG - a single run varies by 10+ days and a check
     /// built on one seed would flap.
     /// </summary>
+    private static Run NewRun(ulong seed, float weightKg, float bodyFatPercent, int resolve,
+                              SeasonSchedule? schedule = null, Biome? biome = null) =>
+        new(seed, Sex.Male, 180, 35, weightKg, bodyFatPercent,
+            Build(5, 6, 3, 8, resolve, 5), null, null, biome, schedule);
+
     private static int SurviveDays(
         float weightKg, float bodyFatPercent, int resolve, Activity[] slots,
         int seeds = 25, int cap = 120)

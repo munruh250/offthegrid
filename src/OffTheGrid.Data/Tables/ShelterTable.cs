@@ -56,7 +56,19 @@ public static class ShelterTable
         ];
 
         if (celsius >= points[0].temp) return points[0].clo;
-        if (celsius <= points[^1].temp) return points[^1].clo;
+
+        // Extrapolate below the table rather than clamping. Balance doc 5.2 only
+        // tabulates down to -5 C because Vancouver Island never goes lower - but
+        // clamping there meant a -25 C arctic night demanded exactly as much
+        // insulation as a mild coastal one, which made every cold biome secretly
+        // temperate and turned shelter-building into wasted slots.
+        if (celsius <= points[^1].temp)
+        {
+            var (tLast, cLast) = points[^1];
+            var (tPrev, cPrev) = points[^2];
+            float slope = (cLast - cPrev) / (tPrev - tLast);   // clo per degree colder
+            return cLast + (tLast - celsius) * slope;
+        }
 
         for (int i = 0; i < points.Length - 1; i++)
         {

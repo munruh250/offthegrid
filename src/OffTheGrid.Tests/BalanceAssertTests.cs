@@ -33,7 +33,7 @@ public sealed class BalanceAssertTests(ITestOutputHelper output)
         var names = BalanceAssert.RunAll().Select(r => r.Name).ToArray();
 
         Assert.Contains(nameof(BalanceAssert.FastingBuildLosesToCompetentPlay), names);
-        Assert.Contains(nameof(BalanceAssert.CompetentPlayerReachesDay60), names);
+        Assert.Contains(nameof(BalanceAssert.CompetentPlayerWinterizesInTime), names);
         Assert.Contains(nameof(BalanceAssert.OnlyBearSustainsAlone), names);
         Assert.Contains(nameof(BalanceAssert.RelocationIsNotADeathSpiral), names);
     }

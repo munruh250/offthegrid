@@ -91,8 +91,8 @@ public sealed class BiomeTests
         for (int day = 1; day <= 90; day += 10)
         {
             Assert.Equal(
-                Biome.VancouverIsland.NightTemperature(day),
-                Biome.ProvingGround.NightTemperature(day), 0.001f);
+                Biome.VancouverIsland.NightTemperature(day, SeasonSchedule.Standard),
+                Biome.ProvingGround.NightTemperature(day, SeasonSchedule.Standard), 0.001f);
         }
     }
 }

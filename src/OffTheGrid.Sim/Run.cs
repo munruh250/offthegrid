@@ -45,6 +45,7 @@ public readonly record struct DayResult
     public float WoodKg { get; init; }
     public float LocalDepletion { get; init; }
     public bool RelocationAvailable { get; init; }
+    public bool Collapsed { get; init; }
     public float HarvestedKg { get; init; }
     public float LarderDaysOfFood { get; init; }
     public bool FoodInsecure { get; init; }
@@ -82,10 +83,12 @@ public sealed class Run
         IReadOnlyDictionary<AttributeKind, int> attributes,
         Loadout? gear = null,
         BalanceProvider? balanceProvider = null,
-        Biome? biome = null)
+        Biome? biome = null,
+        SeasonSchedule? schedule = null)
     {
         Gear = gear ?? Loadout.Standard;
         Biome = biome ?? Biome.VancouverIsland;
+        Schedule = schedule ?? SeasonSchedule.Standard;
         balance = balanceProvider ?? new BalanceProvider();
         var b = balance.Current;
 
@@ -131,6 +134,18 @@ public sealed class Run
 
     /// <summary>Where this run is taking place.</summary>
     public Biome Biome { get; }
+
+    /// <summary>When the seasons turn for this run.</summary>
+    public SeasonSchedule Schedule { get; }
+
+    /// <summary>
+    /// True once the shelter and fire can hold the coldest night this run will
+    /// see. This - not a day count - is the arc the player is racing.
+    /// </summary>
+    public bool IsWinterized =>
+        AvailableClo + Fire.Firewood.FireClo(1f)
+        >= ShelterTable.CloDemandForNightTemp(Biome.NightTemperature(Schedule.WinterArrives, Schedule))
+           - 0.14f * (attributes[AttributeKind.ColdAdaptation] - 5);
 
     /// <summary>
     /// How worked-out the ground around camp is, 1.0 fresh down to near zero.
@@ -197,6 +212,27 @@ public sealed class Run
             Code = "relocation.moved", Magnitude = hit
         });
         return true;
+    }
+
+    /// <summary>Body condition below which pushing movement work risks collapse.</summary>
+    public const float CollapseConditionThreshold = 0.28f;
+
+    /// <summary>True if the player blacked out today. Costs the day, never the run.</summary>
+    public bool Collapsed { get; private set; }
+
+    /// <summary>How many times this run has ended in a blackout.</summary>
+    public int CollapseCount { get; private set; }
+
+    /// <summary>
+    /// Chance of collapsing if the player pushes movement work today. Surfaced so
+    /// the UI can WARN before the slots are committed - the decision only counts
+    /// as a decision if the risk was visible.
+    /// </summary>
+    public float CollapseRiskIfPushing(int movementSlots)
+    {
+        if (BodyConditionRatio >= CollapseConditionThreshold || movementSlots <= 0) return 0f;
+        float shortfall = 1f - BodyConditionRatio / CollapseConditionThreshold;
+        return 0.30f * shortfall * MathF.Min(1f, movementSlots / 3f);
     }
 
     /// <summary>Accumulated injury. Design spec 5.5's incident end condition.</summary>
@@ -328,7 +364,7 @@ public sealed class Run
     /// Night temperature for the MVP biome, falling across the run. Balance doc
     /// 5.2 and 6.1 both key off this - it drives clo demand and firewood need.
     /// </summary>
-    public float NightTempForDay(int dayNumber) => Biome.NightTemperature(dayNumber);
+    public float NightTempForDay(int dayNumber) => Biome.NightTemperature(dayNumber, Schedule);
 
     /// <summary>
     /// Spend a slot ranging out to find better ground. Design spec 8.2's
@@ -402,6 +438,7 @@ public sealed class Run
         bool voluntaryTapOut = false;
         bool gearIsDry = false;
         bool severeInjury = false;
+        Collapsed = false;
 
         switch (acute.Kind)
         {
@@ -439,7 +476,7 @@ public sealed class Run
         float burn = Body.EffectiveBasalMetabolicRate(b);
         bool anyBuildProgress = false;
 
-        var season = Calendar.SeasonForDay(DayNumber);
+        var season = Calendar.SeasonForDay(DayNumber, Schedule);
         float harvestedKg = 0f;
 
         // How desperate the player was when the day started, for scaling the
@@ -449,7 +486,7 @@ public sealed class Run
         for (int i = 0; i < Math.Min(slots, plan.Slots.Count); i++)
         {
             var activity = plan.Slots[i];
-            burn += EnergyModel.ExcessKcalForSlot(activity, Body, fitness, plan.TerrainMultiplier, b);
+            burn += EnergyModel.ExcessKcalForSlot(activity, Body, fitness, plan.TerrainMultiplier * Biome.TerrainMultiplier, b);
             if (activity.IsBuildProgress())
             {
                 anyBuildProgress = true;
@@ -511,6 +548,33 @@ public sealed class Run
                         Magnitude = caught.EdibleKg
                     });
                 }
+            }
+        }
+
+        // ---- collapse from exhaustion ----
+        // The exploration consequence. NOT a fall, NOT fatal, and NOT a dice roll
+        // against the player: it fires only when someone pushes movement-heavy
+        // work while critically depleted, which is a decision they can see coming
+        // and can decline by resting. Terrain is priced in calories (above); this
+        // is what those calories eventually buy you.
+        float exertion = 0f;
+        for (int i = 0; i < Math.Min(slots, plan.Slots.Count); i++)
+            if (plan.Slots[i].IsMovement()) exertion += 1f;
+
+        if (exertion > 0f && BodyConditionRatio < CollapseConditionThreshold)
+        {
+            float shortfall = 1f - BodyConditionRatio / CollapseConditionThreshold;
+            float chance = 0.30f * shortfall * MathF.Min(1f, exertion / 3f);
+            if (Rng.Stream("body.collapse").NextFloat() < chance)
+            {
+                Collapsed = true;
+                CollapseCount++;
+                Morale.ApplyEvent(MoraleSource.WeightLoss, -4f, b);
+                Record.Trace.Add(new TraceEntry
+                {
+                    Day = DayNumber, Slot = 0, Kind = TraceKind.Injury,
+                    Code = "body.collapse", Magnitude = exertion
+                });
             }
         }
 
@@ -602,6 +666,7 @@ public sealed class Run
             WoodKg = WoodKg,
             LocalDepletion = LocalDepletion,
             RelocationAvailable = CanRelocate(b),
+            Collapsed = Collapsed,
             HarvestedKg = harvestedKg,
             LarderDaysOfFood = daysOfFood,
             FoodInsecure = foodInsecure,

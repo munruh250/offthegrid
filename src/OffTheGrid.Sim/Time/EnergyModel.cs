@@ -89,7 +89,20 @@ public static class EnergyModel
 
         float capped = MathF.Min(cloDeficit, 2.5f);
         float massTerm = MathF.Pow(70f / MathF.Max(weightKg, 40f), 0.4f);
-        return capped * 90f * massTerm;
+
+        // 320 kcal per clo of deficit, not 90.
+        //
+        // At 90 the arithmetic said something absurd: a full night of cold stress
+        // cost at most ~225 kcal, while a single slot spent building shelter cost
+        // ~700 kcal plus the food that slot did not catch. Being cold was
+        // literally cheaper than fixing it, and the balance gates caught it -
+        // players who built shelter and cut wood died MORE often than players who
+        // ignored both and fished.
+        //
+        // Shivering thermogenesis is genuinely expensive: several hundred kcal
+        // over a night of real cold stress. 320 makes shelter and fuel worth the
+        // slots they cost, which is the entire premise of balance doc 4 and 5.
+        return capped * 320f * massTerm;
     }
 
     /// <summary>Total metabolic cost of a slot, ignoring the BMR overlap. For display and reference.</summary>

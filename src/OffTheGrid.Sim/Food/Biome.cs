@@ -22,8 +22,34 @@ public sealed class Biome
     public required string Name { get; init; }
     public required IReadOnlyDictionary<(Season, Activity), Encounter[]> Encounters { get; init; }
 
-    /// <summary>Night temperature on a given run day.</summary>
-    public required Func<int, float> NightTemperature { get; init; }
+    /// <summary>Night temperature at the start of a run.</summary>
+    public required float StartNightTempC { get; init; }
+
+    /// <summary>Night temperature once winter has fully arrived. THIS is what makes a biome cold.</summary>
+    public required float WinterNightTempC { get; init; }
+
+    /// <summary>
+    /// Night temperature on a given day, interpolated against the season
+    /// schedule so that an early winter is genuinely an early COLD, not just an
+    /// early relabelling of the food tables.
+    /// </summary>
+    public float NightTemperature(int dayNumber, SeasonSchedule schedule)
+    {
+        float t = Math.Clamp(dayNumber / (float)schedule.WinterArrives, 0f, 1.35f);
+        return StartNightTempC - (StartNightTempC - WinterNightTempC) * t;
+    }
+
+    /// <summary>
+    /// How hard the ground is to move over, as a multiplier on movement-type
+    /// activity cost.
+    ///
+    /// Terrain is priced in CALORIES, not in injury rolls. Rough country does not
+    /// throw dice at you - it charges you more to cross, and that charge is what
+    /// eventually puts you in the position where pushing on is a real decision.
+    /// The multiplier was plumbed through the whole energy model from the start
+    /// and never set to anything but 1.0.
+    /// </summary>
+    public float TerrainMultiplier { get; init; } = 1.0f;
 
     public Encounter[] EncountersFor(Season season, Activity activity) =>
         Encounters.TryGetValue((season, activity), out var e) ? e : [];
@@ -32,7 +58,18 @@ public sealed class Biome
     public static Biome VancouverIsland { get; } = new()
     {
         Name = "Vancouver Island",
-        NightTemperature = day => 12f - 17f * Math.Clamp((day - 1) / 75f, 0f, 1f),
+        // Steep, wet, root-tangled coastal rainforest - genuinely hard going.
+        // Held at 1.12 rather than the ~1.22 the terrain arguably deserves: the
+        // sim is already ~13 days short of its day-60 target, and terrain is the
+        // THIRD mechanic in a row to push the competent-play check against its
+        // threshold. See the note in doc 15 - run length now gates further work.
+        // Steep, wet, root-tangled coastal rainforest - genuinely hard going.
+        TerrainMultiplier = 1.22f,
+        // A MILD biome. Vancouver Island in November sits near freezing, which is
+        // why cold is not what kills you here - food scarcity is. The cold
+        // economy is not broken in this biome, it is simply not the threat.
+        StartNightTempC = 12f,
+        WinterNightTempC = -5f,
         Encounters = new Dictionary<(Season, Activity), Encounter[]>
         {
             // --- Salmon run: the abundance window. Fat available, bank now. ---
@@ -154,7 +191,9 @@ public sealed class Biome
     public static Biome ProvingGround { get; } = new()
     {
         Name = "Proving Ground (control)",
-        NightTemperature = day => 12f - 17f * Math.Clamp((day - 1) / 75f, 0f, 1f),
+        TerrainMultiplier = 1.0f,
+        StartNightTempC = 12f,
+        WinterNightTempC = -5f,
         Encounters = BuildEvenTable()
     };
 
@@ -163,6 +202,31 @@ public sealed class Biome
     /// together. Season multipliers are identical across routes so no route has a
     /// seasonal niche - that is the whole point of a control.
     /// </summary>
+    /// <summary>
+    /// A genuinely COLD biome. Same systems, completely different threat: at
+    /// -25 C a night demands roughly 9 clo, against the ~6.5 a sleeping bag,
+    /// A-frame and fire provide. Here the axe, the saw, the log shelter and the
+    /// whole fuel economy are survival rather than luxury - and a build that is
+    /// weak on Vancouver Island may be correct here.
+    /// </summary>
+    public static Biome BorealInterior { get; } = new()
+    {
+        Name = "Boreal Interior",
+        TerrainMultiplier = 1.08f,
+        StartNightTempC = 5f,
+        // -15 C, not -25. At -25 a night demands ~9.4 clo against a maximum
+        // achievable ~9.1 (clothing + bag + log cabin + fire), so NOBODY can
+        // winterize and the shelter-builder simply has less food than the player
+        // who ignored shelter - measured, and exactly backwards.
+        //
+        // -15 demands 7.4: an A-frame plus fire (6.5) is NOT enough, a log
+        // shelter plus fire (7.9) IS. Winterizing therefore means committing 16
+        // slots to the log shelter, which is the decision this biome exists to
+        // pose.
+        WinterNightTempC = -15f,
+        Encounters = BuildEvenTable()
+    };
+
     private static Dictionary<(Season, Activity), Encounter[]> BuildEvenTable()
     {
         var table = new Dictionary<(Season, Activity), Encounter[]>();

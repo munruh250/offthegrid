@@ -60,14 +60,10 @@ public static class Calendar
 
     /// <summary>
     /// Seasonal phase, which drives the food tables. Balance doc 4.3.
+    /// Defaults to the standard schedule; scenarios supply their own.
     /// </summary>
-    public static Season SeasonForDay(int dayNumber) => dayNumber switch
-    {
-        <= 20 => Season.SalmonRun,
-        <= 35 => Season.RunTapering,
-        <= 50 => Season.Lean,
-        _ => Season.Winter
-    };
+    public static Season SeasonForDay(int dayNumber, SeasonSchedule? schedule = null) =>
+        (schedule ?? SeasonSchedule.Standard).SeasonForDay(dayNumber);
 
     /// <summary>
     /// Palette interpolation parameter for the presentation layer, t = (day-1)/59.
