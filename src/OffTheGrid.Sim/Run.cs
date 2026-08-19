@@ -46,6 +46,8 @@ public readonly record struct DayResult
     public float LocalDepletion { get; init; }
     public bool RelocationAvailable { get; init; }
     public bool Collapsed { get; init; }
+    public float RawKg { get; init; }
+    public float PreservedKg { get; init; }
     public float HarvestedKg { get; init; }
     public float LarderDaysOfFood { get; init; }
     public bool FoodInsecure { get; init; }
@@ -223,6 +225,49 @@ public sealed class Run
     public float WorkCapacity =>
         Body.PhysicalCapacity * (0.72f + 0.056f * attributes[AttributeKind.Fitness]);
 
+    /// <summary>Camp structure currently under construction, if any.</summary>
+    public CampStructure? BuildingNow { get; private set; }
+
+    private float campProgressSlots;
+
+    /// <summary>
+    /// Choose what to build next at camp. Ordered by what the run needs: a light
+    /// cache first because it is cheap and keeps animals off, then something that
+    /// PROCESSES, and finally the cold cache once the nights will support it.
+    /// </summary>
+    private CampStructure? NextStructure()
+    {
+        bool freezingSoon = Biome.NightTemperature(
+            Math.Min(DayNumber + 10, Schedule.WinterArrives), Schedule) <= CampStructures.FreezingThresholdC;
+
+        if (!Larder.Has(CampStructure.LightCache)) return CampStructure.LightCache;
+        if (!Larder.Has(CampStructure.DryingRack)) return CampStructure.DryingRack;
+        if (!Larder.Has(CampStructure.SmokeRack)) return CampStructure.SmokeRack;
+        if (freezingSoon && !Larder.Has(CampStructure.ColdCache)) return CampStructure.ColdCache;
+        if (!Larder.Has(CampStructure.CachePit)) return CampStructure.CachePit;
+        return null;
+    }
+
+    private void AdvanceCampStructure(BalanceData b)
+    {
+        BuildingNow ??= NextStructure();
+        if (BuildingNow is null) return;
+
+        var entry = CampStructures.Get(BuildingNow.Value);
+        campProgressSlots += WorkCapacity;
+        if (campProgressSlots < entry.BuildSlots) return;
+
+        campProgressSlots -= entry.BuildSlots;
+        Larder.AddStructure(BuildingNow.Value);
+        Record.Trace.Add(new TraceEntry
+        {
+            Day = DayNumber, Slot = 0, Kind = TraceKind.Action,
+            Code = $"camp.{BuildingNow.Value}".ToLowerInvariant(),
+            Magnitude = entry.CapacityKg
+        });
+        BuildingNow = null;
+    }
+
     /// <summary>Body condition below which pushing movement work risks collapse.</summary>
     public const float CollapseConditionThreshold = 0.28f;
 
@@ -357,7 +402,7 @@ public sealed class Run
 
         // A better camp stores more. This is what turns preservation into the
         // lever doc 8 claims it is.
-        Larder.CapacityKg = Larder.CapacityFor((int)next, attributes[AttributeKind.Bushcraft]);
+
 
         // Spec 5.6: shelter tier milestone is +12.
         Morale.ApplyEvent(MoraleSource.ShelterMilestone, b.MoraleShelterMilestone, b);
@@ -503,6 +548,8 @@ public sealed class Run
                 if (activity == Activity.RenderMarrow && GearEffects.CanPerform(Gear, ActivityRequirement.Rendering))
                     Larder.RenderMarrow(1f, b);
                 if (activity == Activity.WhittleComfortProject) AdvanceComfortProject(b);
+                if (activity == Activity.PreserveFood) Larder.Preserve(1f, WorkCapacity);
+                if (activity == Activity.BuildCamp) AdvanceCampStructure(b);
             }
 
             if (activity == Activity.Exploring) Prospect();
@@ -626,6 +673,8 @@ public sealed class Run
         var meal = plan.DirectRation ?? Larder.Eat(burn, Body.WeightKg, b);
         var nutrition = NutritionModel.Evaluate(meal, Body.WeightKg, b);
 
+        Larder.CapacityKg = Larder.CapacityFromStructures(NightTempForDay(DayNumber))
+                          + attributes[AttributeKind.Bushcraft];
         Larder.ApplyDailySpoilage(NightTempForDay(DayNumber));
 
         float daysOfFood = Larder.DaysOfFood(Body.WeightKg, b);
@@ -682,6 +731,8 @@ public sealed class Run
             LocalDepletion = LocalDepletion,
             RelocationAvailable = CanRelocate(b),
             Collapsed = Collapsed,
+            RawKg = Larder.RawKg,
+            PreservedKg = Larder.PreservedKg,
             HarvestedKg = harvestedKg,
             LarderDaysOfFood = daysOfFood,
             FoodInsecure = foodInsecure,

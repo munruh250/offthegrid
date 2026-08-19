@@ -68,6 +68,8 @@ public static class RivalPolicy
             [Activity.ChoppingWood] = 4f,
             [Activity.WhittleComfortProject] = 5f,
             [Activity.RenderMarrow] = 3f,
+            [Activity.PreserveFood] = 4f,
+            [Activity.BuildCamp] = 6f,
             [Activity.Rest] = 2f,
         };
 
@@ -80,6 +82,13 @@ public static class RivalPolicy
         if (woodShort) Boost(Activity.ChoppingWood, 8);
         if (lowMorale) Boost(Activity.WhittleComfortProject, 9);
         if (run.Larder.BoneKg > 5f) Boost(Activity.RenderMarrow, 5);
+
+        // Raw food on the clock is the most urgent thing in camp - a kill you do
+        // not process is a kill you did not make.
+        if (run.Larder.RawKg > 3f) Boost(Activity.PreserveFood, 10);
+        if (run.Larder.RawKg > 10f) Boost(Activity.PreserveFood, 8);
+        if (run.Larder.ProcessingThroughputPerSlot <= 0f) Boost(Activity.BuildCamp, 9);
+        if (run.BuildingNow is not null) Boost(Activity.BuildCamp, 4);
 
         // --- temperament ---
         switch (personality)

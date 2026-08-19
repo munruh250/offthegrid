@@ -27,7 +27,13 @@ public enum Activity
     HaulingLogs,
 
     /// <summary>Boil bone for marrow fat. The protein-free fat path (B3).</summary>
-    RenderMarrow
+    RenderMarrow,
+
+    /// <summary>Smoke, dry or pack away raw food before it turns.</summary>
+    PreserveFood,
+
+    /// <summary>Build a cache, rack or cold store.</summary>
+    BuildCamp
 }
 
 public static class ActivityExtensions
@@ -49,6 +55,8 @@ public static class ActivityExtensions
         Activity.ChoppingWood => 6.3f,
         Activity.HaulingLogs => 8.0f,
         Activity.RenderMarrow => 2.2f,
+        Activity.PreserveFood => 2.6f,
+        Activity.BuildCamp => 4.2f,
         _ => throw new ArgumentOutOfRangeException(nameof(activity))
     };
 
@@ -77,6 +85,8 @@ public static class ActivityExtensions
         Activity.Sawing => true,
         Activity.ChoppingWood => true,
         Activity.RenderMarrow => true,
+        Activity.PreserveFood => true,
+        Activity.BuildCamp => true,
         _ => false
     };
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using OffTheGrid.Data.Balance;
 using OffTheGrid.Data.Tables;
 using OffTheGrid.Sim.Nutrition;
@@ -17,10 +18,18 @@ namespace OffTheGrid.Sim.Food;
 /// </summary>
 public sealed class Larder
 {
+    // PRESERVED - smoked, dried or frozen. Keeps.
     private float proteinG;
     private float fatG;
     private float carbohydrateG;
+
+    // RAW - straight off the animal. Spoils in days unless it is worked or frozen.
+    private float rawProteinG;
+    private float rawFatG;
+    private float rawCarbohydrateG;
+
     private float boneKg;
+    private readonly HashSet<CampStructure> built = [];
 
     /// <summary>
     /// Drying rack by default: 30-day shelf life against the cache pit's 12.
@@ -48,8 +57,76 @@ public sealed class Larder
     public static float CapacityFor(int shelterTierIndex, int bushcraft) =>
         BaseCapacityKg + 6f * shelterTierIndex + bushcraft;
 
-    public float ProteinG => proteinG;
-    public float FatG => fatG;
+    public float ProteinG => proteinG + rawProteinG;
+    public float FatG => fatG + rawFatG;
+
+    /// <summary>Preserved mass only - what will still be here in a fortnight.</summary>
+    public float PreservedKg => (proteinG + fatG + carbohydrateG) / 1000f * 4f;
+
+    /// <summary>Raw mass awaiting processing. This is the clock the player is racing.</summary>
+    public float RawKg => (rawProteinG + rawFatG + rawCarbohydrateG) / 1000f * 4f;
+
+    /// <summary>Structures built at camp.</summary>
+    public IReadOnlyCollection<CampStructure> Built => built;
+
+    public bool Has(CampStructure structure) => built.Contains(structure);
+
+    /// <summary>Add a structure once it has been built.</summary>
+    public void AddStructure(CampStructure structure) => built.Add(structure);
+
+    /// <summary>Everything the camp can hold, from what has been built.</summary>
+    public float CapacityFromStructures(float nightTempC)
+    {
+        float total = BaseCapacityKg;
+        foreach (var st in built)
+        {
+            var e = CampStructures.Get(st);
+            if (e.RequiresFreezing && nightTempC > CampStructures.FreezingThresholdC) continue;
+            total += e.CapacityKg;
+        }
+        return total;
+    }
+
+    /// <summary>
+    /// How much raw mass a slot of processing can convert, using the best rack
+    /// built. Zero if nothing has been built to process with - in which case raw
+    /// food simply rots, which is the cost of skipping the investment.
+    /// </summary>
+    public float ProcessingThroughputPerSlot
+    {
+        get
+        {
+            float best = 0f;
+            foreach (var st in built)
+                best = Math.Max(best, CampStructures.Get(st).ProcessKgPerSlot);
+            return best;
+        }
+    }
+
+    /// <summary>Shelf life of preserved stores, from the best structure built.</summary>
+    public int PreservedShelfLifeDays(float nightTempC)
+    {
+        int best = 3;
+        foreach (var st in built)
+        {
+            var e = CampStructures.Get(st);
+            if (e.RequiresFreezing && nightTempC > CampStructures.FreezingThresholdC) continue;
+            best = Math.Max(best, e.ShelfLifeDays);
+        }
+        return best;
+    }
+
+    /// <summary>Best predator protection among what is built.</summary>
+    public float PredatorProtection
+    {
+        get
+        {
+            float best = 0f;
+            foreach (var st in built)
+                best = Math.Max(best, CampStructures.Get(st).PredatorProtection);
+            return best;
+        }
+    }
 
     /// <summary>Stored carbohydrate. Bypasses the protein ceiling entirely.</summary>
     public float CarbohydrateG => carbohydrateG;
@@ -61,12 +138,12 @@ public sealed class Larder
     public float BoneKg => boneKg;
 
     /// <summary>Rough edible mass, from macro density. Used against capacity.</summary>
-    public float StoredKg => (proteinG + fatG + carbohydrateG) / 1000f * 4f;
+    public float StoredKg => PreservedKg + RawKg;
 
     public float GrossKcal(BalanceData balance) =>
-        proteinG * balance.KcalPerGramProtein
-      + fatG * balance.KcalPerGramFat
-      + carbohydrateG * balance.KcalPerGramCarbohydrate;
+        (proteinG + rawProteinG) * balance.KcalPerGramProtein
+      + (fatG + rawFatG) * balance.KcalPerGramFat
+      + (carbohydrateG + rawCarbohydrateG) * balance.KcalPerGramCarbohydrate;
 
     /// <summary>
     /// Days of food held: stored protein divided by the daily protein ceiling.
@@ -85,7 +162,7 @@ public sealed class Larder
         // fast the larder can actually be eaten. Measuring against burn instead
         // understates supplies by roughly 2x and makes the player read as
         // food-insecure while sitting on nearly a week of meat.
-        return proteinG / ceilingG;
+        return (proteinG + rawProteinG) / ceilingG;
     }
 
     /// <summary>Bone recovered per kg of edible mass. Bigger animals carry more.</summary>
@@ -103,25 +180,61 @@ public sealed class Larder
     {
         boneKg += edibleKg * BoneFractionOfEdible;
 
-        float processingLoss = Method == PreservationMethod.None
-            ? 0f
-            : PreservationTable.Get(Method).LossFraction;
-        float kept = 1f - processingLoss;
-        protein *= kept;
-        fat *= kept;
-        carbohydrate *= kept;
-        proteinG += protein;
-        fatG += fat;
-        carbohydrateG += carbohydrate;
+        // A kill arrives RAW. It is not banked until it has been worked, which
+        // is the decision balance doc 4 describes and the sim previously skipped
+        // by depositing every catch straight into preserved stores.
+        rawProteinG += protein;
+        rawFatG += fat;
+        rawCarbohydrateG += carbohydrate;
 
         float overflow = StoredKg - CapacityKg;
         if (overflow > 0f)
         {
-            float keep = CapacityKg / StoredKg;
-            proteinG *= keep;
-            fatG *= keep;
-            carbohydrateG *= keep;
+            // Over capacity, the RAW spills first - you cannot hang what there is
+            // no room for, and what is already preserved is already packed away.
+            float keep = Math.Max(0f, 1f - overflow / Math.Max(RawKg, 0.001f));
+            keep = Math.Clamp(keep, 0f, 1f);
+            rawProteinG *= keep;
+            rawFatG *= keep;
+            rawCarbohydrateG *= keep;
         }
+    }
+
+    /// <summary>
+    /// Spend a slot working raw food into preserved stores. Smoking, drying,
+    /// packing into the cold cache.
+    ///
+    /// This is the answer to "food should not just rot" - it rots because you did
+    /// not get to it, not because the game decided so. A big kill now creates an
+    /// obligation: several slots of processing, immediately, while the rest sits
+    /// on the clock. That is exactly the pressure doc 4 describes around an elk
+    /// and exactly what makes preservation the top lever it is supposed to be.
+    /// </summary>
+    public float Preserve(float slots, float bodyCapacity = 1f)
+    {
+        float throughput = ProcessingThroughputPerSlot * slots * bodyCapacity;
+        if (throughput <= 0f || RawKg <= 0f) return 0f;
+
+        float fraction = Math.Min(1f, throughput / RawKg);
+
+        // Loss is taken here, on the way in, per balance doc 4.
+        float loss = 0f;
+        foreach (var st in built)
+        {
+            var e = CampStructures.Get(st);
+            if (e.ProcessKgPerSlot > 0f) { loss = e.ProcessLoss; break; }
+        }
+        float kept = 1f - loss;
+
+        proteinG += rawProteinG * fraction * kept;
+        fatG += rawFatG * fraction * kept;
+        carbohydrateG += rawCarbohydrateG * fraction * kept;
+
+        float moved = RawKg * fraction;
+        rawProteinG *= 1f - fraction;
+        rawFatG *= 1f - fraction;
+        rawCarbohydrateG *= 1f - fraction;
+        return moved;
     }
 
     /// <summary>
@@ -148,20 +261,30 @@ public sealed class Larder
 
         float fraction = Math.Min(1f, appetiteKcal / available);
 
-        // Cap the draw so protein intake stops at the ceiling.
         float ceilingG = NutritionModel.ProteinCeilingG(bodyweightKg, balance);
-        if (proteinG > 0f)
-        {
-            fraction = Math.Min(fraction, ceilingG / proteinG);
-        }
-
+        float totalProtein = proteinG + rawProteinG;
+        if (totalProtein > 0f) fraction = Math.Min(fraction, ceilingG / totalProtein);
         fraction = Math.Clamp(fraction, 0f, 1f);
-        var meal = new Macros(proteinG * fraction, fatG * fraction, carbohydrateG * fraction);
 
-        proteinG -= meal.ProteinG;
-        fatG -= meal.FatG;
-        carbohydrateG -= meal.CarbohydrateG;
+        var meal = new Macros(
+            (proteinG + rawProteinG) * fraction,
+            (fatG + rawFatG) * fraction,
+            (carbohydrateG + rawCarbohydrateG) * fraction);
+
+        // Draw from RAW first - it is the portion on a clock, and eating the
+        // fresh meat before it turns is what anyone would actually do.
+        Draw(ref rawProteinG, ref proteinG, meal.ProteinG);
+        Draw(ref rawFatG, ref fatG, meal.FatG);
+        Draw(ref rawCarbohydrateG, ref carbohydrateG, meal.CarbohydrateG);
+
         return meal;
+
+        static void Draw(ref float raw, ref float preserved, float wanted)
+        {
+            float fromRaw = Math.Min(raw, wanted);
+            raw -= fromRaw;
+            preserved = Math.Max(0f, preserved - (wanted - fromRaw));
+        }
     }
 
     /// <summary>
@@ -175,6 +298,9 @@ public sealed class Larder
         proteinG *= keep;
         fatG *= keep;
         carbohydrateG *= keep;
+        rawProteinG *= keep;
+        rawFatG *= keep;
+        rawCarbohydrateG *= keep;
         boneKg *= keep;
     }
 
@@ -227,9 +353,20 @@ public sealed class Larder
     /// </summary>
     public void ApplyDailySpoilage(float nightTempCelsius = 10f)
     {
-        int shelfLife = Method == PreservationMethod.None
-            ? 3
-            : PreservationTable.Get(Method).ShelfLifeDays;
+        // RAW food is on a short clock. Below freezing it stops - the cold IS the
+        // preservation, which is why a cold cache is worthless in September and
+        // the best structure in the game in November.
+        bool frozen = nightTempCelsius <= CampStructures.FreezingThresholdC;
+        if (!frozen && RawKg > 0f)
+        {
+            const float rawShelfLifeDays = 3.5f;
+            float rawKeep = 1f - 1f / rawShelfLifeDays;
+            rawProteinG *= rawKeep;
+            rawFatG *= rawKeep;
+            rawCarbohydrateG *= rawKeep;
+        }
+
+        int shelfLife = PreservedShelfLifeDays(nightTempCelsius);
 
         // Cold is a preservation method. Below freezing the cache essentially
         // holds, which is how northern contestants actually bank a big kill.
