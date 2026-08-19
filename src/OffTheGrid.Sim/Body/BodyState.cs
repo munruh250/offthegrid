@@ -48,6 +48,29 @@ public sealed class BodyState
     public float Bmi => WeightKg / MathF.Pow(HeightCm / 100f, 2f);
     public float WeightLossFraction => (StartWeightKg - WeightKg) / StartWeightKg;
 
+    /// <summary>Lean mass a well-built adult of this height carries. The reference for capability.</summary>
+    public static float ReferenceLeanKg(float heightCm) => 0.80f * (heightCm - 100f);
+
+    /// <summary>
+    /// How much physical work this body can actually do, relative to a reference
+    /// build of the same height. 1.0 is typical; below 1 is a small engine.
+    ///
+    /// WHY THIS EXISTS. Lean mass used to cost calories and buy nothing, which
+    /// produced a clean exploit: minimise muscle, maximise fat. Measured across
+    /// 200 contests, the two winners were carrying ~52 kg of lean against a field
+    /// average of 64 - big battery, small engine, no downside. The fattest
+    /// contestant never won; the SKINNY-FAT ones took 63% of contests between
+    /// them.
+    ///
+    /// Tying capability to lean mass closes it without a special-case rule at
+    /// character creation, and it has a second benefit worth as much: capability
+    /// DECAYS as the body wastes. Your output falls as you starve, which is the
+    /// body-failing thesis expressed in the one place it was missing - what you
+    /// can still get done.
+    /// </summary>
+    public float PhysicalCapacity =>
+        Math.Clamp(LeanMassKg / ReferenceLeanKg(HeightCm), 0.65f, 1.25f);
+
     /// <summary>Mifflin-St Jeor at current mass. Design spec 5.1.</summary>
     public float BasalMetabolicRate =>
         10f * WeightKg + 6.25f * HeightCm - 5f * AgeYears + Sex.BmrConstant();
@@ -99,7 +122,8 @@ public sealed class BodyState
         LeanMassKg = LeanMassKg,
         BodyFatPercent = BodyFatPercent,
         Bmi = Bmi,
-        WeightLossFraction = WeightLossFraction
+        WeightLossFraction = WeightLossFraction,
+        PhysicalCapacity = PhysicalCapacity
     };
 }
 
@@ -117,4 +141,5 @@ public readonly record struct BodySnapshot
     public float BodyFatPercent { get; init; }
     public float Bmi { get; init; }
     public float WeightLossFraction { get; init; }
+    public float PhysicalCapacity { get; init; }
 }

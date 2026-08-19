@@ -214,6 +214,15 @@ public sealed class Run
         return true;
     }
 
+    /// <summary>
+    /// What a work slot actually returns, combining trained Fitness with the
+    /// lean mass to apply it. An attribute without a body behind it is a claim,
+    /// not a capability - and this is what stops "minimise muscle, maximise fat"
+    /// being a free win.
+    /// </summary>
+    public float WorkCapacity =>
+        Body.PhysicalCapacity * (0.72f + 0.056f * attributes[AttributeKind.Fitness]);
+
     /// <summary>Body condition below which pushing movement work risks collapse.</summary>
     public const float CollapseConditionThreshold = 0.28f;
 
@@ -383,7 +392,7 @@ public sealed class Run
         // 0.86 at Fitness 3 against 1.58 at Fitness 9. Ranging out is the thing
         // this attribute is supposed to be FOR, so the spread has to be wide
         // enough to be worth building around.
-        float fitnessScale = 0.5f + 0.12f * fitness;
+        float fitnessScale = (0.5f + 0.12f * fitness) * Body.PhysicalCapacity;
 
         // Diminishing returns. The first day out finds the obvious good ground;
         // the tenth is refining. This also stops exploration being a strictly
@@ -499,7 +508,7 @@ public sealed class Run
             if (activity == Activity.Exploring) Prospect();
 
             float wood = Firewood.YieldPerSlot(activity, Gear, attributes[AttributeKind.Bushcraft]);
-            if (wood > 0f) WoodKg += wood;
+            if (wood > 0f) WoodKg += wood * WorkCapacity;
 
             // Drying gear was inert. Wet insulation is barely insulation, so this
             // is the answer to a storm rather than a wasted slot.
@@ -513,7 +522,13 @@ public sealed class Run
                 var caught = Harvest.Resolve(activity, season, attributes[governing.Value], Gear, Rng, EffectiveTerritory, Biome);
                 if (caught.CaughtSomething)
                 {
-                    Larder.Add(caught.ProteinG, caught.FatG, caught.CarbohydrateG, caught.EdibleKg);
+                    // How much you bring back scales with what your body can
+                    // actually carry and process. Hunting decides whether you
+                    // catch it; Fitness and lean mass decide how much of it
+                    // reaches camp.
+                    float haul = WorkCapacity;
+                    Larder.Add(caught.ProteinG * haul, caught.FatG * haul,
+                               caught.CarbohydrateG * haul, caught.EdibleKg * haul);
                     harvestedKg += caught.EdibleKg;
 
                     // Working the ground thins it. Doc 12's trigger A is this
