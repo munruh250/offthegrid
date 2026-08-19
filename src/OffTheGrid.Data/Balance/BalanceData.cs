@@ -18,7 +18,10 @@ public sealed class BalanceData
 
     // ---- Body: activity (design spec 5.2) ----
     public float ActivityKcalConstant { get; init; } = 1.05f;
-    public float FitnessEfficiencyPerPoint { get; init; } = 0.02f;
+    // Fitness's work-capacity bonus is largely absorbed by the protein ceiling -
+    // catching more does not help when intake is capped either way. Burn
+    // efficiency is its UNCAPPED lever, so that is where its value has to live.
+    public float FitnessEfficiencyPerPoint { get; init; } = 0.068f;
     public float FitnessBaseline { get; init; } = 5f;
     public float MovementMassReference { get; init; } = 80f;
     public float MovementMassExponent { get; init; } = 1.15f;
@@ -86,8 +89,8 @@ public sealed class BalanceData
     // Resolve's impact halved across all four places it acts, after it measured
     // 3.24 days per point against the next attribute's 1.03 - the last number
     // out of range once the food routes were levelled.
-    public float MoraleStartBase { get; init; } = 78f;
-    public float MoraleStartPerResolve { get; init; } = 1.5f;
+    public float MoraleStartBase { get; init; } = 82f;
+    public float MoraleStartPerResolve { get; init; } = 0.8f;
     public float MoraleMax { get; init; } = 100f;
     public float MoraleWarningBand { get; init; } = 25f;
 
@@ -101,7 +104,7 @@ public sealed class BalanceData
     public float MoraleMemoryEventMin { get; init; } = -5.0f;
     public float MoraleMemoryEventMax { get; init; } = -20.0f;
     /// <summary>Memory events scale by (1 - Resolve/ResolveDivisor). Design spec 5.6.</summary>
-    public float MoraleMemoryResolveDivisor { get; init; } = 24f;
+    public float MoraleMemoryResolveDivisor { get; init; } = 42f;
 
     // ---- Morale: gains (design spec 5.6) ----
     public float MoraleLargeFoodSuccess { get; init; } = 10f;

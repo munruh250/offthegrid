@@ -29,13 +29,12 @@ public sealed class MoraleTests
     public void StartingMoraleScalesWithResolve()
     {
         // [DEVIATES FROM SPEC 5.6] The spec gives M_start = 70 + 3*Resolve.
-        // Currently 78 + 1.5*Resolve - Resolve's impact was halved across all
-        // four places it acts, after measuring 3.24 days per point against the
-        // next attribute's 1.03. Needs designer ratification; if 5.6 is restored
-        // these revert to 73 / 85 / 100.
-        Assert.Equal(79.5f, Fresh(resolve: 1).Current, 0.01f);
-        Assert.Equal(85.5f, Fresh(resolve: 5).Current, 0.01f);
-        Assert.Equal(93f, Fresh(resolve: 10).Current, 0.01f);
+        // Currently 82 + 0.8*Resolve. Resolve was rescaled twice: halved (ratified
+        // in balance doc 7.5), then trimmed again toward a 1.25 days-per-point
+        // target. Measured at 1.39 against the next attribute's 1.08.
+        Assert.Equal(82.8f, Fresh(resolve: 1).Current, 0.01f);
+        Assert.Equal(86f, Fresh(resolve: 5).Current, 0.01f);
+        Assert.Equal(90f, Fresh(resolve: 10).Current, 0.01f);
 
         // The PROPERTY is unchanged and is what actually matters: more Resolve
         // means more starting morale, and the scale still tops out at 100.
@@ -286,11 +285,11 @@ public sealed class MoraleTests
         float weakHit = weak.Breakdown().Contributions.First().Value;
         float strongHit = strong.Breakdown().Contributions.First().Value;
 
-        // [DEVIATES FROM SPEC 5.6] Divisor is 24, not 12 - see the note on
+        // [DEVIATES FROM SPEC 5.6] Divisor is 42, not 12 - see the note on
         // StartingMoraleScalesWithResolve. The property under test is unchanged.
         Assert.True(Math.Abs(strongHit) < Math.Abs(weakHit));
-        Assert.Equal(-20f * (1f - 1f / 24f), weakHit, 0.01f);
-        Assert.Equal(-20f * (1f - 10f / 24f), strongHit, 0.01f);
+        Assert.Equal(-20f * (1f - 1f / 42f), weakHit, 0.01f);
+        Assert.Equal(-20f * (1f - 10f / 42f), strongHit, 0.01f);
     }
 
     [Fact]

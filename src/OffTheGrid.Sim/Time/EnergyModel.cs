@@ -119,7 +119,7 @@ public static class EnergyModel
     {
         float skill = (coldAdaptation - 1) / 9f;              // 0 at 1, 1 at 10
         float chill = Math.Clamp((14f - nightTempC) / 26f, 0f, 1.4f);
-        return 165f * skill * chill * MathF.Pow(weightKg / 80f, 0.4f);
+        return 112f * skill * chill * MathF.Pow(weightKg / 80f, 0.4f);
     }
 
     /// <summary>Total metabolic cost of a slot, ignoring the BMR overlap. For display and reference.</summary>

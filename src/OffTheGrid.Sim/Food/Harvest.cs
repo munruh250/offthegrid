@@ -65,6 +65,27 @@ public static class Harvest
     public static float SkillMultiplier(int attribute) => 0.6f + 0.08f * attribute;
 
     /// <summary>
+    /// Per-route skill curves.
+    ///
+    /// One shared curve meant every attribute governing a route was worth the
+    /// same, and they should not be: Hunting governs a rare high-value event, so
+    /// improving it matters more per point than improving a route that fires
+    /// three times a slot. These are tuned to per-attribute value targets rather
+    /// than to a single shape.
+    /// </summary>
+    public static float SkillMultiplierFor(Activity activity, int attribute) => activity switch
+    {
+        // Steeper: the conversion it improves is a rare, enormous event.
+        Activity.HuntingStalk => 0.16f + 0.168f * attribute,
+
+        // Shallower: three draws a slot already smooths the outcome, so each
+        // point of skill moves less.
+        Activity.Foraging => 0.70f + 0.060f * attribute,
+
+        _ => SkillMultiplier(attribute)
+    };
+
+    /// <summary>
     /// Chance of converting an encounter into food, before skill.
     ///
     /// Big game with a bow is brutal and should stay brutal: you get a shot, at
@@ -236,7 +257,7 @@ public static class Harvest
             if (!GearEffects.CanPerform(gear, need))
                 return new HarvestResult { Encountered = true, EncounteredSource = encounter.Source };
 
-            float conversion = BaseConversion(encounter.Source, activity) * SkillMultiplier(attribute);
+            float conversion = BaseConversion(encounter.Source, activity) * SkillMultiplierFor(activity, attribute);
             bool taken = rng.Stream("harvest.conversion").NextFloat() < conversion;
 
             return taken

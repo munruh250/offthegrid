@@ -107,7 +107,7 @@ public static class AcuteEvents
         // clear meta pick. 16 narrows it to ~2.3x: still the strongest single
         // stat, which is faithful to the format, without making the other five
         // decorative.
-        float fragility = 1f - resolve / 28f;
+        float fragility = 1f - resolve / 56f;
         // Three phases, matching how the format actually plays out:
         //   settling-in  - the decision still feels reversible, shock is highest
         //   the grind    - the day-20-to-45 plateau the design itself flags

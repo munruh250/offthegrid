@@ -103,10 +103,11 @@ public sealed class Run
         this.attributes = attributes;
         Larder = new Larder();
 
-        // Drop-point lottery. Spec 8.2 is explicit that a poor drop is a real and
-        // fair outcome; it is what makes exploration a strategy rather than
-        // fog-clearing busywork.
-        TerritoryQuality = 0.7f + Rng.Stream("world.droppoint").NextFloat() * 0.6f;
+        // Drop-point lottery, rolled per route. Spec 8.2 is explicit that a poor
+        // drop is a real and fair outcome - and a drop that is poor for fishing
+        // is often good for something else, which is what makes reading your
+        // ground a skill rather than a dice result.
+        Territory = new Territory(Rng);
 
         Record = new RunRecord
         {
@@ -157,8 +158,8 @@ public sealed class Run
     /// </summary>
     public float LocalDepletion { get; private set; } = 1f;
 
-    /// <summary>Effective richness of the ground actually being worked.</summary>
-    public float EffectiveTerritory => TerritoryQuality * LocalDepletion;
+    /// <summary>Effective richness of the ground actually being worked, per route.</summary>
+    public float EffectiveTerritory => Territory.Overall * LocalDepletion;
 
     /// <summary>Consecutive days the food trigger has been satisfied. Doc 12 s2.1.</summary>
     public int FoodTriggerDays { get; private set; }
@@ -223,12 +224,13 @@ public sealed class Run
     /// being a free win.
     /// </summary>
     public float WorkCapacity =>
-        Body.PhysicalCapacity * (0.72f + 0.056f * attributes[AttributeKind.Fitness]);
+        Body.PhysicalCapacity * (0.60f + 0.080f * attributes[AttributeKind.Fitness]);
 
     /// <summary>Camp structure currently under construction, if any.</summary>
     public CampStructure? BuildingNow { get; private set; }
 
     private float campProgressSlots;
+    private IReadOnlyList<Activity> lastPlannedSlots = System.Array.Empty<Activity>();
 
     /// <summary>
     /// Choose what to build next at camp. Ordered by what the run needs: a light
@@ -299,11 +301,15 @@ public sealed class Run
     public float LastFireQuality { get; private set; } = 1f;
 
     /// <summary>
-    /// How good the ground around camp is, as a multiplier on encounter rates.
-    /// Design spec 8.2: animals live on the map, your drop point may genuinely be
-    /// poor, and a good area exists somewhere. Exploring finds it.
+    /// How good the ground is, per route. Design spec 8.2's prospecting model.
     /// </summary>
-    public float TerritoryQuality { get; private set; }
+    public Territory Territory { get; private set; } = null!;
+
+    /// <summary>Average ground quality, for readouts.</summary>
+    public float TerritoryQuality => Territory.Overall;
+
+    /// <summary>What the last slot of exploring turned up, if anything.</summary>
+    public Activity? LastDiscovery { get; private set; }
 
     /// <summary>Shelter built so far. Drives clo, and its milestones drive morale.</summary>
     public ShelterTier Shelter { get; private set; } = ShelterTier.None;
@@ -331,7 +337,7 @@ public sealed class Run
     /// </summary>
     private void AdvanceComfortProject(BalanceData b)
     {
-        comfortProgressSlots += Harvest.SkillMultiplier(attributes[AttributeKind.Bushcraft]);
+        comfortProgressSlots += Harvest.SkillMultiplier(attributes[AttributeKind.Bushcraft]) * 1.15f;
         if (comfortProgressSlots < SlotsPerComfortProject) return;
 
         comfortProgressSlots -= SlotsPerComfortProject;
@@ -433,24 +439,24 @@ public sealed class Run
     {
         int fitness = attributes[AttributeKind.Fitness];
 
-        // Fitness gets its own curve, steeper than the generic skill multiplier:
-        // 0.86 at Fitness 3 against 1.58 at Fitness 9. Ranging out is the thing
-        // this attribute is supposed to be FOR, so the spread has to be wide
-        // enough to be worth building around.
-        float fitnessScale = (0.5f + 0.12f * fitness) * Body.PhysicalCapacity;
+        // Fitness gets its own curve, steeper than the generic skill multiplier.
+        // Ranging out is what this attribute is FOR, so the spread has to be wide
+        // enough to build around.
+        float effectiveness = (0.45f + 0.13f * fitness) * Body.PhysicalCapacity;
 
-        // Diminishing returns. The first day out finds the obvious good ground;
-        // the tenth is refining. This also stops exploration being a strictly
-        // dominant opener.
-        float headroom = (MaxTerritoryQuality - TerritoryQuality)
-                       / (MaxTerritoryQuality - 1.0f);
+        // Tell the scout which routes this camp actually works.
+        var worked = new List<Activity>();
+        foreach (var slot in lastPlannedSlots)
+            if (System.Array.IndexOf(Territory.Routes, slot) >= 0 && !worked.Contains(slot)) worked.Add(slot);
 
-        float gain = 0.055f * fitnessScale * Math.Max(0.15f, headroom);
-        TerritoryQuality = Math.Min(TerritoryQuality + gain, MaxTerritoryQuality);
+        LastDiscovery = Territory.Prospect(effectiveness, worked);
+        Record.Trace.Add(new TraceEntry
+        {
+            Day = DayNumber, Slot = 0, Kind = TraceKind.Action,
+            Code = $"scout.found.{LastDiscovery}".ToLowerInvariant(),
+            Magnitude = Territory.For(LastDiscovery.Value)
+        });
     }
-
-    /// <summary>The best ground findable in a biome. Exploration has diminishing returns.</summary>
-    public const float MaxTerritoryQuality = 1.9f;
 
     private static ShelterTier NextTier(ShelterTier current) => current switch
     {
@@ -532,6 +538,7 @@ public sealed class Run
 
         var season = Calendar.SeasonForDay(DayNumber, Schedule);
         float harvestedKg = 0f;
+        lastPlannedSlots = plan.Slots;
 
         // How desperate the player was when the day started, for scaling the
         // relief a catch brings.
@@ -566,7 +573,8 @@ public sealed class Run
             var governing = Harvest.GoverningAttribute(activity);
             if (governing.HasValue)
             {
-                var caught = Harvest.Resolve(activity, season, attributes[governing.Value], Gear, Rng, EffectiveTerritory, Biome);
+                var caught = Harvest.Resolve(activity, season, attributes[governing.Value], Gear, Rng,
+                    Territory.For(activity) * LocalDepletion, Biome);
                 if (caught.CaughtSomething)
                 {
                     // How much you bring back scales with what your body can
