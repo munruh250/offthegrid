@@ -22,16 +22,66 @@ namespace OffTheGrid.Sim.Food;
 public sealed class Territory
 {
     private readonly Dictionary<Activity, float> quality = new();
+    private readonly Dictionary<Activity, float> potential = new();
 
     public const float Floor = 0.55f;
     public const float Ceiling = 2.1f;
 
+    /// <summary>
+    /// Fraction of the surrounding country the contestant has actually seen.
+    /// Tunable - the show's contestants work a small fraction of what is
+    /// available to them, and the unseen remainder is what makes ranging out
+    /// worth a slot.
+    /// </summary>
+    public const float InitialExploredFraction = 0.10f;
+
+    /// <summary>How much of the country has been seen, 0 to 1.</summary>
+    public float ExploredFraction { get; private set; } = InitialExploredFraction;
+
     public Territory(Rng rng)
     {
-        // Each route rolled INDEPENDENTLY. A poor drop for one thing is often a
-        // good drop for another, which is what makes reading your ground a skill.
+        // TWO numbers per route.
+        //
+        // quality   is what you have FOUND - the ground you can currently work.
+        // potential is what is out there to find, across the ~90% you have not
+        //           walked yet.
+        //
+        // The drop tells you the CHARACTER of your immediate area - whether this
+        // looks like fishing country or a game trail - and it does not tell you
+        // what is over the ridge. That gap is the whole argument for exploring:
+        // your first camp is a sample of a tenth of the map.
         foreach (var route in Routes)
-            quality[route] = 0.7f + rng.Stream($"world.drop.{route}").NextFloat() * 0.6f;
+        {
+            float found = 0.70f + rng.Stream($"world.drop.{route}").NextFloat() * 0.55f;
+            float best = found + rng.Stream($"world.potential.{route}").NextFloat() * 0.85f;
+
+            quality[route] = found;
+            potential[route] = Math.Min(Ceiling, best);
+        }
+    }
+
+    /// <summary>
+    /// The best this country could offer for a route, if it were all walked.
+    /// Not shown to the player - it is what they are looking FOR.
+    /// </summary>
+    public float PotentialFor(Activity activity) =>
+        potential.TryGetValue(activity, out var p) ? p : 1f;
+
+    /// <summary>
+    /// A plain-language read on the ground at the drop. This is what a contestant
+    /// can tell in their first day: whether there is water worth fishing, sign
+    /// worth following, shoreline worth walking.
+    /// </summary>
+    public string CharacterOf(Activity activity)
+    {
+        float q = For(activity);
+        return q switch
+        {
+            >= 1.15f => "promising",
+            >= 0.95f => "workable",
+            >= 0.78f => "thin",
+            _ => "poor"
+        };
     }
 
     public static readonly Activity[] Routes =
@@ -72,6 +122,10 @@ public sealed class Territory
     /// </summary>
     public Activity Prospect(float effectiveness, IReadOnlyList<Activity>? worked = null)
     {
+        // Ranging out opens country. With ~90% unwalked at the drop, there is a
+        // long way to go and a real reason to go there.
+        ExploredFraction = Math.Min(1f, ExploredFraction + 0.045f * effectiveness);
+
         // A scout looks for what you NEED. Restricting the search to the routes
         // actually being worked matters more than it sounds: an earlier version
         // improved the globally weakest route, which was often one the player
@@ -82,13 +136,16 @@ public sealed class Territory
         foreach (var r in candidates)
             if (quality.ContainsKey(r) && quality[r] < quality[target]) target = r;
 
-        float headroom = (Ceiling - quality[target]) / (Ceiling - 1.0f);
-        quality[target] = Math.Min(Ceiling, quality[target] + 0.30f * effectiveness * Math.Max(0.25f, headroom));
+        // You can only find what is actually out there. A route whose potential
+        // is already reached will not improve however far you walk - which is
+        // itself information, and the reason relocation exists.
+        float gap = Math.Max(0f, potential[target] - quality[target]);
+        quality[target] = Math.Min(potential[target], quality[target] + 0.42f * effectiveness * Math.Max(0.18f, gap));
 
-        // Ranging out also gives you a general read on the country - every route
-        // gains a little, so a slot spent scouting is never wasted.
+        // And a general read on the country - every route gains a little against
+        // its own potential, so a scouting slot is never wasted.
         foreach (var r in Routes)
-            quality[r] = Math.Min(Ceiling, quality[r] + 0.045f * effectiveness);
+            quality[r] = Math.Min(potential[r], quality[r] + 0.05f * effectiveness);
 
         return target;
     }

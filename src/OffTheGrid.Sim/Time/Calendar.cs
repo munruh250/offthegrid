@@ -66,12 +66,20 @@ public static class Calendar
         (schedule ?? SeasonSchedule.Standard).SeasonForDay(dayNumber);
 
     /// <summary>
-    /// Palette interpolation parameter for the presentation layer, t = (day-1)/59.
-    /// Cedar and Lichen at 0, Cold Front at 1. Lives here because the visual arc
-    /// and the mechanical arc are the same arc - the UI is a difficulty readout.
+    /// Palette interpolation for the presentation layer. Cedar and Lichen at 0,
+    /// Cold Front at 1.
+    ///
+    /// Keyed to the SEASON SCHEDULE rather than an absolute day count. Doc 07
+    /// locked t = (day-1)/59, which was correct while winter always arrived on
+    /// day 51 - but under a short-summer scenario it would show early autumn
+    /// while snow was falling. The UI is a difficulty readout, so it has to read
+    /// the difficulty that is actually happening.
     /// </summary>
-    public static float SeasonalPaletteT(int dayNumber) =>
-        Math.Clamp((dayNumber - 1) / 59f, 0f, 1f);
+    public static float SeasonalPaletteT(int dayNumber, SeasonSchedule? schedule = null)
+    {
+        var sched = schedule ?? SeasonSchedule.Standard;
+        return Math.Clamp((dayNumber - 1) / (float)Math.Max(1, sched.WinterArrives - 1), 0f, 1f);
+    }
 }
 
 /// <summary>Seasonal phase. Balance doc 4.3.</summary>

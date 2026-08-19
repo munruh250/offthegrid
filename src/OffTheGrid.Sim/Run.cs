@@ -44,6 +44,7 @@ public readonly record struct DayResult
     public float FireQuality { get; init; }
     public float WoodKg { get; init; }
     public float LocalDepletion { get; init; }
+    public float ExploredFraction { get; init; }
     public bool RelocationAvailable { get; init; }
     public bool Collapsed { get; init; }
     public float RawKg { get; init; }
@@ -755,6 +756,7 @@ public sealed class Run
             FireQuality = LastFireQuality,
             WoodKg = WoodKg,
             LocalDepletion = LocalDepletion,
+            ExploredFraction = Territory.ExploredFraction,
             RelocationAvailable = CanRelocate(b),
             Collapsed = Collapsed,
             RawKg = Larder.RawKg,

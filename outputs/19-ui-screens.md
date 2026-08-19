@@ -254,15 +254,82 @@ Sequenced so each screen unblocks the next, and so the earliest screens are the 
 
 ---
 
-## 16. Open questions
+## 16. Resolved questions
 
-| # | Question |
-|---|---|
-| U1 | Gear wear as a number or as descriptive text? Doc 17 §C2 leaned to **both**, on dedicated screens. Confirm at first build. |
-| U2 | Does the seasonal palette shift on a *schedule* or on the season *parameter*? Movable seasons make these different. |
-| U3 | How much of the map is visible at drop? Doc 10 assumes fog; territory is now per route, so partial reveal may read better. |
-| U4 | Does the Attempt Meter appear for rivals in any form, or is the player the only one who ever sees odds? |
-| U5 | One screen or two for Larder and Nutrition? They overlap heavily now that raw and preserved are split. |
+### U1 — Gear condition reads in **USES REMAINING** ✅ DECIDED
+
+Neither "a number" nor "descriptive text" as originally posed. A percentage does
+not answer what the player actually wants to know — *will this last the week?* —
+and text alone cannot separate fraying at 60% from fraying at 30%.
+
+**"About 40 shots left in this string."** Precise, field-craft rather than a
+health bar, and it answers the repair-or-hunt decision directly. A descriptive
+state (*sound / worn / failing*) rides on top as the glanceable version.
+
+`GearDurability` now carries per-item tuning: uses, repair cost, whether repair
+consumes cordage, and the fraction at which the player is warned.
+
+| Item | Uses | Repair | Warn at |
+|---|---|---|---|
+| Bow and arrows | **400** *(balance doc §7)* | 2 slots + cordage | 25% |
+| Gillnet | 220 | 2 slots + cordage | 30% |
+| Fishing line and hooks | 300 | 1 slot | 25% |
+| Snare wire | 260 | 1 slot | 25% |
+| Axe | 520 | 1 slot | 20% |
+| Saw | 430 | 1 slot | 20% |
+| Knife | 900 | 1 slot | 15% |
+| Sleeping bag | 380 | 2 slots + cordage | 25% |
+| Tarp | 300 | 1 slot + cordage | 25% |
+| Paracord | 180 *(consumed)* | — | 30% |
+| Pot | 4,000 | 1 slot | 10% |
+| Ferro rod | 3,000 | — | 15% |
+
+Things that take load fail within a run; things that only get carried do not.
+Wear is attributed to the work that causes it — a hunting slot wears the bow, a
+chopping slot wears the axe.
+
+### U2 — Palette follows the **season schedule** ✅ DECIDED
+
+`t = (day − 1) / (WinterArrives − 1)`, not the fixed `/59` doc 07 locked. Under a
+short-summer scenario the old formula would show early autumn while snow was
+falling. The UI is a difficulty readout, so it has to read the difficulty that is
+actually happening.
+
+### U3 — The drop shows **~10% of the country**, and its character ✅ DECIDED
+
+Tunable, at `Territory.InitialExploredFraction`. The contestant can tell in their
+first day what kind of ground this is — *promising / workable / thin / poor* for
+each of fishing, hunting, trapping, foraging — and cannot tell what is over the
+ridge.
+
+Mechanically this is **two numbers per route**: what you have **found**, and what
+the country **holds**. Scouting closes the gap between them, and a route already
+at its potential will not improve however far you walk — which is itself
+information, and the reason relocation exists.
+
+The 90% unwalked is the whole argument for spending a slot exploring: your first
+camp is a sample, not a verdict.
+
+### U4 — Rivals never use the Attempt Meter ✅ DECIDED
+
+They resolve at expected value, and that gap is precisely what makes the player's
+minigame skill decide the contest (B8).
+
+**But check-ins report how someone went out** — *"Rhodes broke his bow on day 31
+and never recovered."* The data is already in the trace, it is free drama, and it
+teaches a mechanic through someone else's mistake.
+
+### U5 — Larder and Nutrition are **one screen** ✅ DECIDED
+
+The entire point of B1 is that the player connects *"my cache is lean"* to *"I am
+starving."* That is the hardest thing in the design to communicate and the
+highest-risk item in the project. **Splitting it across two screens breaks the
+exact causal link the design needs them to make.**
+
+One screen: what you have on the left, what your body can do with it on the
+right, and the protein ceiling bar between them as the thing that connects the
+two. The moment the bar caps and the calorie counter stops rising **is** the
+mechanic.
 
 ---
 
