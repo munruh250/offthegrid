@@ -83,6 +83,15 @@ public static class RivalPolicy
         if (lowMorale) Boost(Activity.WhittleComfortProject, 9);
         if (run.Larder.BoneKg > 5f) Boost(Activity.RenderMarrow, 5);
 
+        // A rester with a full larder has earned the right to rest - which is the
+        // only condition under which the strategy is meant to work.
+        if (personality == Personality.ConservativeRester && foodDays > 6f)
+        {
+            Boost(Activity.Rest, 8);
+            Boost(Activity.HuntingStalk, -4);
+            Boost(Activity.Foraging, -3);
+        }
+
         // Raw food on the clock is the most urgent thing in camp - a kill you do
         // not process is a kill you did not make.
         if (run.Larder.RawKg > 3f) Boost(Activity.PreserveFood, 10);
@@ -112,10 +121,19 @@ public static class RivalPolicy
                 Boost(Activity.WhittleComfortProject, 2);
                 break;
             case Personality.ConservativeRester:
-                Boost(Activity.Rest, 3);
+                // A conservative rester is NOT idle - they are investing in being
+                // able to coast. Caches, a good shelter, and everything preserved,
+                // so a windfall carries them for weeks. Resting only pays once
+                // there is something banked to rest ON; the earlier version rested
+                // without building the thing that makes resting survivable, and
+                // took 0% of contests.
+                Boost(Activity.BuildCamp, 4);
+                Boost(Activity.PreserveFood, 4);
+                Boost(Activity.ShelterBuild, 3);
                 Boost(Activity.TrapLine, 3);          // passive income suits them
-                Boost(Activity.PreserveFood, 1);
+                Boost(Activity.Rest, 2);
                 Boost(Activity.Exploring, -3);
+                Boost(Activity.HuntingStalk, -1);
                 break;
             case Personality.SteadyProvider:
                 Boost(Activity.Fishing, 2);
