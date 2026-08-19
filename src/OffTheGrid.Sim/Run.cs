@@ -339,7 +339,7 @@ public sealed class Run
 
         // Spec 4.1: Resolve governs "morale gained per comfort project". Another
         // clause that was specified and never implemented.
-        float payout = b.MoraleProjectCompleted * (0.75f + 0.05f * attributes[AttributeKind.Resolve]);
+        float payout = b.MoraleProjectCompleted * (0.875f + 0.025f * attributes[AttributeKind.Resolve]);
         Morale.ApplyEvent(MoraleSource.ComfortProject, payout, b);
         Record.Trace.Add(new TraceEntry
         {

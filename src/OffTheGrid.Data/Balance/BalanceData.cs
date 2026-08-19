@@ -83,8 +83,11 @@ public sealed class BalanceData
     public float MoraleProjectCompleted { get; init; } = 14.0f;
 
     // ---- Morale: starting value and bands (design spec 5.6) ----
-    public float MoraleStartBase { get; init; } = 70f;
-    public float MoraleStartPerResolve { get; init; } = 3f;
+    // Resolve's impact halved across all four places it acts, after it measured
+    // 3.24 days per point against the next attribute's 1.03 - the last number
+    // out of range once the food routes were levelled.
+    public float MoraleStartBase { get; init; } = 78f;
+    public float MoraleStartPerResolve { get; init; } = 1.5f;
     public float MoraleMax { get; init; } = 100f;
     public float MoraleWarningBand { get; init; } = 25f;
 
@@ -98,7 +101,7 @@ public sealed class BalanceData
     public float MoraleMemoryEventMin { get; init; } = -5.0f;
     public float MoraleMemoryEventMax { get; init; } = -20.0f;
     /// <summary>Memory events scale by (1 - Resolve/ResolveDivisor). Design spec 5.6.</summary>
-    public float MoraleMemoryResolveDivisor { get; init; } = 12f;
+    public float MoraleMemoryResolveDivisor { get; init; } = 24f;
 
     // ---- Morale: gains (design spec 5.6) ----
     public float MoraleLargeFoodSuccess { get; init; } = 10f;
