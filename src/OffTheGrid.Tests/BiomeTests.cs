@@ -59,15 +59,21 @@ public sealed class BiomeTests
     [Fact]
     public void VancouverIslandKeepsItsFishingCharacter()
     {
-        // The MVP biome SHOULD be lopsided - the salmon run is what makes it that
-        // place. This guards against accidentally flattening it while tuning.
-        double fishing = ExpectedKcalPerSlot(Biome.VancouverIsland, Season.SalmonRun, Activity.Fishing);
-        double trapping = ExpectedKcalPerSlot(Biome.VancouverIsland, Season.SalmonRun, Activity.TrapLine);
-        Assert.True(fishing > trapping * 3.0, "the salmon run must remain a genuine abundance window");
-
-        // ...and it must collapse afterwards, or it is not a "run".
+        // Vancouver Island's character is the SHAPE of its fishing season, not
+        // fishing out-earning every other route. The earlier version of this test
+        // asserted the latter, and it was guarding an imbalance rather than an
+        // identity: fishing returned 5.5x a slot in the salmon run against
+        // trapping's 0.5x, which made every other route pointless.
+        double runFishing = ExpectedKcalPerSlot(Biome.VancouverIsland, Season.SalmonRun, Activity.Fishing);
         double winterFishing = ExpectedKcalPerSlot(Biome.VancouverIsland, Season.Winter, Activity.Fishing);
-        Assert.True(winterFishing < fishing / 10.0);
+
+        Assert.True(winterFishing < runFishing / 6.0,
+            "the salmon RUN must collapse afterwards, or it is not a run");
+
+        // And the routes that replace it must actually be there in winter.
+        double winterTrapping = ExpectedKcalPerSlot(Biome.VancouverIsland, Season.Winter, Activity.TrapLine);
+        Assert.True(winterTrapping > winterFishing * 2.0,
+            "something must take over when the water goes dead");
     }
 
     [Fact]

@@ -91,29 +91,36 @@ public static class RivalPolicy
         if (run.BuildingNow is not null) Boost(Activity.BuildCamp, 4);
 
         // --- temperament ---
+        //
+        // Deliberately SMALL nudges. An earlier version applied swings of 7-9,
+        // which made three of the four temperaments actively distort a sensible
+        // plan while SteadyProvider merely did the sensible thing - so of course
+        // it won 81% of contests. A temperament should be a LEAN, not an
+        // obsession: everyone plays sensibly, and each has a different edge they
+        // press when the situation allows.
         switch (personality)
         {
             case Personality.AggressiveHunter:
-                Boost(Activity.HuntingStalk, 9);
-                Boost(Activity.Rest, -2);
-                Boost(Activity.ShelterBuild, -2);
+                Boost(Activity.HuntingStalk, 4);
+                Boost(Activity.TrapLine, 1);
+                Boost(Activity.Rest, -1);
                 break;
             case Personality.PatientBuilder:
-                Boost(Activity.ShelterBuild, 7);
-                Boost(Activity.ChoppingWood, 4);
-                Boost(Activity.WhittleComfortProject, 3);
-                Boost(Activity.HuntingStalk, -3);
+                Boost(Activity.ShelterBuild, 2);
+                Boost(Activity.BuildCamp, 3);         // camp, not just shelter
+                Boost(Activity.PreserveFood, 2);
+                Boost(Activity.WhittleComfortProject, 2);
                 break;
             case Personality.ConservativeRester:
-                Boost(Activity.Rest, 7);
+                Boost(Activity.Rest, 3);
                 Boost(Activity.TrapLine, 3);          // passive income suits them
-                Boost(Activity.HuntingStalk, -4);
-                Boost(Activity.Exploring, -5);
+                Boost(Activity.PreserveFood, 1);
+                Boost(Activity.Exploring, -3);
                 break;
             case Personality.SteadyProvider:
-                Boost(Activity.Fishing, 4);
-                Boost(Activity.Foraging, 3);
-                Boost(Activity.TrapLine, 2);
+                Boost(Activity.Fishing, 2);
+                Boost(Activity.Foraging, 2);
+                Boost(Activity.TrapLine, 1);
                 break;
         }
 

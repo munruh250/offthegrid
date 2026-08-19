@@ -105,6 +105,23 @@ public static class EnergyModel
         return capped * 320f * massTerm;
     }
 
+    /// <summary>
+    /// Calories NOT spent overnight because the contestant sleeps well in the
+    /// cold. Always-on: it applies on a mild night in a good shelter as well as
+    /// a hard night in a bad one, which is what makes Cold Adaptation a stat you
+    /// would choose rather than one that only rescues a mistake.
+    ///
+    /// Scales with how cold the night is, so it is worth more late in a run and
+    /// far more in a northern biome - the attribute has a place where it shines
+    /// without ever being dead.
+    /// </summary>
+    public static float SleepQualitySaving(int coldAdaptation, float weightKg, float nightTempC)
+    {
+        float skill = (coldAdaptation - 1) / 9f;              // 0 at 1, 1 at 10
+        float chill = Math.Clamp((14f - nightTempC) / 26f, 0f, 1.4f);
+        return 165f * skill * chill * MathF.Pow(weightKg / 80f, 0.4f);
+    }
+
     /// <summary>Total metabolic cost of a slot, ignoring the BMR overlap. For display and reference.</summary>
     public static float KcalForSlot(
         Activity activity,

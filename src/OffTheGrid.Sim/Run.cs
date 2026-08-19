@@ -667,6 +667,15 @@ public sealed class Run
         float cloDeficit = CloDemandTonight(DayNumber) - warmth;
         burn += EnergyModel.ThermoregulationKcal(cloDeficit, Body.WeightKg, b);
 
+        // Cold Adaptation pays EVERY night, not only on nights you mismanaged.
+        // Design spec 4.1 gives it "sleep quality in poor shelter" alongside the
+        // thermoneutral offset; modelled as a small always-on reduction in
+        // overnight metabolic cost. Before this it was pure insurance - worth
+        // 1.37 days per point with a bad kit and exactly 0.00 with a good one,
+        // which makes it a stat nobody drafts on purpose.
+        burn -= EnergyModel.SleepQualitySaving(
+            attributes[AttributeKind.ColdAdaptation], Body.WeightKg, NightTempForDay(DayNumber));
+
         // ---- intake ----
         // Appetite is what the day cost. The larder rarely covers it, and the
         // protein ceiling then caps what of it the body can actually use.

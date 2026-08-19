@@ -110,6 +110,27 @@ public static class Harvest
         _ => 0.0f
     };
 
+    /// <summary>
+    /// How many independent chances a slot gets.
+    ///
+    /// Some routes are plural by nature and were being modelled as singular. A
+    /// trap LINE is a line - ten snares checked on a circuit can yield several
+    /// animals, not one. Foraging is 2.2 hours of gathering, not a single
+    /// handful. A gillnet fishes while you do something else; a hook does not.
+    /// Stalking is genuinely one animal.
+    ///
+    /// This is what lets trapping reach a competitive return without pushing its
+    /// encounter probabilities past 1.0, where they saturate and stop responding
+    /// to tuning at all.
+    /// </summary>
+    public static int DrawsPerSlot(Activity activity, Loadout gear) => activity switch
+    {
+        Activity.TrapLine => 3,
+        Activity.Foraging => 3,
+        Activity.Fishing => gear.Has(GearItem.Gillnet) ? 2 : 1,
+        _ => 1
+    };
+
     /// <summary>Which attribute governs this activity. Design spec 4.1.</summary>
     public static AttributeKind? GoverningAttribute(Activity activity) => activity switch
     {
@@ -149,7 +170,38 @@ public static class Harvest
     /// spec 8.2 - animals live on the map, your drop point may genuinely be poor,
     /// and exploring finds better ground.
     /// </summary>
+    /// <summary>
+    /// Resolve one slot, which may be several independent chances - see
+    /// <see cref="DrawsPerSlot"/>. Returns the combined haul.
+    /// </summary>
     public static HarvestResult Resolve(
+        Activity activity, Season season, int attribute, Loadout gear, Rng rng,
+        float territoryQuality = 1f, Biome? biome = null)
+    {
+        int draws = DrawsPerSlot(activity, gear);
+        if (draws == 1) return ResolveOnce(activity, season, attribute, gear, rng, territoryQuality, biome);
+
+        HarvestResult combined = default;
+        for (int i = 0; i < draws; i++)
+        {
+            var one = ResolveOnce(activity, season, attribute, gear, rng, territoryQuality, biome);
+            if (!one.Encountered) continue;
+
+            combined = new HarvestResult
+            {
+                Encountered = true,
+                EncounteredSource = one.EncounteredSource ?? combined.EncounteredSource,
+                Source = one.Source ?? combined.Source,
+                EdibleKg = combined.EdibleKg + one.EdibleKg,
+                ProteinG = combined.ProteinG + one.ProteinG,
+                FatG = combined.FatG + one.FatG,
+                CarbohydrateG = combined.CarbohydrateG + one.CarbohydrateG
+            };
+        }
+        return combined;
+    }
+
+    private static HarvestResult ResolveOnce(
         Activity activity, Season season, int attribute, Loadout gear, Rng rng,
         float territoryQuality = 1f, Biome? biome = null)
     {

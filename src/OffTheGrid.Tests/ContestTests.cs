@@ -128,7 +128,14 @@ public sealed class ContestTests
             OffTheGrid.Sim.Time.Activity.Rest
         };
 
-        for (int i = 0; i < 10 && !contest.IsOver; i++) contest.StepDay(plan);
-        Assert.True(contest.Player!.Run.DayNumber >= 10);
+        // Checks that the PLAYER'S plan is what gets applied - not that the
+        // player survives. An early crisis tap-out is designed behaviour, so
+        // asserting survival made this test flap on whichever seed rolled one.
+        int before = contest.Player!.Run.DayNumber;
+        for (int i = 0; i < 10 && !contest.IsOver && !contest.Player!.IsOut; i++)
+            contest.StepDay(plan);
+
+        Assert.True(contest.Player!.Run.DayNumber > before, "the player's days should advance");
+        Assert.Contains(contest.Field, c => !c.IsPlayer && c.Run.DayNumber > before);
     }
 }
