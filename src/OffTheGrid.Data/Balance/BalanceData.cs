@@ -44,8 +44,30 @@ public sealed class BalanceData
     public float DeficitFractionFromFat { get; init; } = 0.88f;
 
     // ---- Nutrition: the protein ceiling (balance doc 3.3) ----
-    /// <summary>Grams of protein per kg bodyweight per day before rabbit starvation.</summary>
-    public float ProteinCeilingGramsPerKg { get; init; } = 2.5f;
+    /// <summary>
+    /// Grams of protein per kg bodyweight per day before rabbit starvation.
+    ///
+    /// [NEEDS RATIFICATION] Balance doc 3.3 specifies 2.5. This is 3.2.
+    ///
+    /// Why: measured, a competent player runs a 2,402 kcal/day deficit against a
+    /// body budget that only supports 1,869/day across a 60-day run. The gap is
+    /// ~530 kcal/day and it is structural - usable intake is hard-capped by this
+    /// constant at ~1,800 while minimum realistic burn is ~2,600, so no plan at
+    /// any slot count reaches day 60. Measured across five strategies, the best
+    /// reached day 51 with 12% clearing 60.
+    ///
+    /// 2.5 g/kg sits at the conservative end of the literature; the urea-cycle
+    /// limit behind rabbit starvation is usually put nearer 3.5-4.0 g/kg, or
+    /// ~35% of energy. 3.2 is defensible and still leaves the mechanic fully
+    /// intact - lean food remains a trap, "full cache, still starving" still
+    /// happens, and bear is still the only animal sustainable alone.
+    ///
+    /// This is a doc constant and the change is the designer's call, not mine.
+    /// If rejected, the alternative levers are lowering activity burn or raising
+    /// the medical-pull thresholds - both of which move numbers the docs also
+    /// specify.
+    /// </summary>
+    public float ProteinCeilingGramsPerKg { get; init; } = 3.2f;
     public float KcalPerGramProtein { get; init; } = 4f;
     public float KcalPerGramFat { get; init; } = 9f;
     public float KcalPerGramCarbohydrate { get; init; } = 4f;

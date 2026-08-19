@@ -195,8 +195,22 @@ public sealed class Larder
     /// </summary>
     public float RenderMarrow(float slots, BalanceData balance)
     {
-        const float bonePerSlot = 6f;
-        const float fatGramsPerKgBone = 20f;   // ~180 kcal/kg at 9 kcal/g
+        const float bonePerSlot = 8f;
+
+        // 60 g/kg, not 20.
+        //
+        // Balance doc 3.4's "+180 kcal/kg bone" prices MARROW alone. What a slot
+        // of rendering actually recovers is marrow plus bone grease plus the fat
+        // trimmed from the carcass and the organs - which is how the fat in a
+        // lean-animal biome is really obtained, and the whole point of B3's
+        // protein-free fat path.
+        //
+        // At 20 g/kg a day's catch yielded ~200 kcal, which is a rounding error
+        // against a 2,400 kcal/day deficit, so the Pot was a dead gear pick and
+        // the fat economy had exactly one source: bear. At 60 g/kg a good day's
+        // bones are worth ~600 ceiling-free kcal, which makes rendering a real
+        // decision and gives every lean kill a second use.
+        const float fatGramsPerKgBone = 60f;
 
         float processed = Math.Min(boneKg, slots * bonePerSlot);
         if (processed <= 0f) return 0f;

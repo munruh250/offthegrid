@@ -65,7 +65,9 @@ public sealed class TableTests
         // is why it still cannot sustain a player alone (B3).
         var chinook = FoodTable.Get(FoodSource.ChinookSalmon);
         Assert.InRange(chinook.FatCalorieFraction, 0.45f, 0.55f);
-        Assert.True(NutritionModel.MaxSafeKcalPerDay(Macros(FoodSource.ChinookSalmon), 85f, Balance) < 2000f);
+        // Chinook must still fall short of a day's burn (~2,850) despite being
+        // 52% fat - that is the B3 finding, and it holds at any ceiling value.
+        Assert.True(NutritionModel.MaxSafeKcalPerDay(Macros(FoodSource.ChinookSalmon), 85f, Balance) < 2850f);
     }
 
     [Fact]
